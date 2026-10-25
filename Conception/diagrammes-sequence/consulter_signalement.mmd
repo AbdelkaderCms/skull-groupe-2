@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant Admin
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Admin->>Vue: Clique sur « Joueurs signalés »
+    Vue->>ControleurJavaFX: consulterSignalements()
+    ControleurJavaFX->>Proxy: consulterSignalements()
+    Proxy->>ControleurREST: GET /signalements
+    ControleurREST->>Service: consulterSignalements()
+
+    Service->>Repository: trouverSignalements()
+    Repository->>BDD: SELECT signalements et membres signalés
+    BDD-->>Repository: Liste des signalements
+    Repository-->>Service: Liste des signalements
+
+    Service-->>ControleurREST: Liste des signalements
+    ControleurREST-->>Proxy: HTTP 200 OK + signalements
+    Proxy-->>ControleurJavaFX: Liste des signalements
+    ControleurJavaFX-->>Vue: Afficher les signalements
+    Vue-->>Admin: Affiche les joueurs signalés et les motifs
