@@ -1,0 +1,40 @@
+sequenceDiagram
+    participant U as Utilisateur
+    participant V as Vue
+    participant C as ControleurJavaFX
+    participant P as Proxy
+    participant API as ControleurREST
+    participant S as Service
+    participant R as Repository
+    participant DB as BDD
+
+    Note over U,V: L'utilisateur consulte ses aspects
+    U->>V: Sélectionne un aspect
+    U->>V: Clique sur « Définir comme aspect courant »
+    V->>C: definirAspectCourant(idAspect)
+    C->>P: definirAspectCourant(idAspect)
+    P->>API: PUT /joueurs/me/aspect-courant + token<br/>{idAspect}
+    Note over API,S: Identité du joueur issue du token validé
+    API->>S: definirAspectCourant(idJoueur, idAspect)
+    S->>R: verifierPossessionAspect(idJoueur, idAspect)
+    R->>DB: SELECT inventaire WHERE joueur_id = :idJoueur<br/>AND aspect_id = :idAspect
+    DB-->>R: Aspect possédé / non possédé
+    R-->>S: Résultat de la vérification
+
+    alt Aspect non possédé
+        S-->>API: Modification refusée
+        API-->>P: HTTP 403 Forbidden + motif
+        P-->>C: Aspect non possédé
+        C-->>V: Afficher l'erreur
+        V-->>U: Affiche « Vous ne possédez pas cet aspect »
+    else Aspect possédé
+        S->>R: modifierAspectCourant(idJoueur, idAspect)
+        R->>DB: UPDATE joueur SET aspect_courant_id = :idAspect<br/>WHERE id = :idJoueur
+        DB-->>R: Aspect courant enregistré
+        R-->>S: Modification confirmée
+        S-->>API: Nouvel aspect courant
+        API-->>P: HTTP 200 OK + aspect courant
+        P-->>C: Aspect courant mis à jour
+        C-->>V: Actualiser l'apparence et l'aspect sélectionné
+        V-->>U: Affiche « Aspect courant mis à jour »
+    end

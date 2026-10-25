@@ -1,0 +1,74 @@
+sequenceDiagram
+    actor U as Utilisateur
+    participant V as Vue
+    participant C as ControleurJavaFX
+    participant P as Proxy
+    participant API as ControleurREST
+    participant S as Service
+    participant R as Repository
+    participant DB as BDD
+
+    U->>V: Cliquer sur « Démarrer la partie »
+    V->>C: demarrerPartie(idPartie)
+    C->>P: demarrerPartie(idPartie)
+    P->>API: POST /parties/{idPartie}/demarrer
+    API->>S: demarrerPartie(idPartie, idUtilisateur)
+    S->>R: Charger la partie et la liste des participants
+    R->>DB: SELECT partie et participants humains + IA
+    DB-->>R: Résultat du chargement
+    R-->>S: Partie et participants, ou partie introuvable
+
+    alt Partie introuvable
+        S-->>API: Partie introuvable
+        API-->>P: HTTP 404 Not Found + motif
+        P-->>C: Partie introuvable
+        C-->>V: Afficher le motif
+        V-->>U: « Partie introuvable »
+    else Partie trouvée
+        S->>S: Vérifier que l'utilisateur est l'organisateur
+        alt Utilisateur non organisateur
+            S-->>API: Démarrage interdit
+            API-->>P: HTTP 403 Forbidden + motif
+            P-->>C: Seul l'organisateur peut démarrer la partie
+            C-->>V: Afficher le motif
+            V-->>U: « Seul l'organisateur peut démarrer la partie »
+        else Utilisateur organisateur
+            S->>S: Vérifier le statut EN_ATTENTE
+            alt Partie déjà démarrée ou statut invalide
+                S-->>API: Statut incompatible avec le démarrage
+                API-->>P: HTTP 409 Conflict + motif
+                P-->>C: Partie déjà démarrée ou statut invalide
+                C-->>V: Afficher le motif
+                V-->>U: « Partie déjà démarrée ou statut invalide »
+            else Statut EN_ATTENTE
+                S->>S: Vérifier la présence de tous les joueurs attendus
+                Note right of S: Participants humains + IA = places prévues<br/>ET nombre de participants supérieur ou égal à 3
+
+                alt Joueur manquant ou moins de 3 joueurs
+                    S-->>API: Tous les joueurs ne sont pas encore présents
+                    API-->>P: HTTP 409 Conflict<br/>Tous les joueurs ne sont pas encore présents
+                    P-->>C: Tous les joueurs ne sont pas encore présents
+                    C-->>V: Afficher le motif du refus
+                    V-->>U: « Tous les joueurs ne sont pas encore présents »
+                    Note over S,DB: Démarrage refusé : aucune date définie,<br/>aucune manche initialisée, aucun passage à EN_COURS
+                else Tous les joueurs présents et minimum 3 joueurs
+                    S->>S: Définir dateHeureDebut = maintenant
+                    S->>S: Créer la première manche
+                    S->>S: Initialiser 4 disques par joueur<br/>3 fleurs + 1 crâne
+                    S->>S: Préparer le début de manche<br/>Phase de pose secrète
+                    S->>R: Enregistrer le démarrage et la manche initialisée
+                    R->>DB: BEGIN TRANSACTION
+                    R->>DB: UPDATE partie SET statut = 'EN_COURS',<br/>dateDebut = dateHeureDebut WHERE id = idPartie
+                    R->>DB: INSERT / UPDATE de la manche initialisée
+                    R->>DB: COMMIT
+                    DB-->>R: Enregistrement confirmé
+                    R-->>S: Partie et manche enregistrées
+                    S-->>API: État initial de la partie
+                    API-->>P: HTTP 200 OK + état initial de la partie
+                    P-->>C: Partie démarrée + état initial
+                    C-->>V: Afficher le succès et ouvrir le plateau
+                    V-->>U: « La partie commence »<br/>Redirection vers le plateau de jeu
+                end
+            end
+        end
+    end
