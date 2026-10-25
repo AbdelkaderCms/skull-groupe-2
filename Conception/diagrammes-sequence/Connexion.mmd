@@ -22,21 +22,21 @@ sequenceDiagram
     Repository-->>Service: Résultat de la recherche + hash mdp
 
     alt Membre inexistant
-        Service-->>ControleurREST: Erreur « Identifiants incorrects »
-        ControleurREST-->>Proxy: HTTP 401 Unauthorized
-        Proxy-->>ControleurJavaFX: Échec de connexion
+        Service-->>ControleurREST: Erreur « Email ou mot de passe incorrects »
+        ControleurREST-->>Proxy: HTTP 401 Unauthorized {« Email ou mot de passe incorrects »}
+        Proxy-->>ControleurJavaFX: Erreur « Email ou mot de passe incorrects »
         ControleurJavaFX-->>Vue: Afficher erreur
-        Vue-->>Utilisateur: « Identifiants incorrects »
+        Vue-->>Utilisateur: « Email ou mot de passe incorrects »
 
     else Membre trouvé
         Service->>Service: Vérifier le mot de passe avec le hash
 
         alt Mot de passe incorrect
-            Service-->>ControleurREST: Erreur « Identifiants incorrects »
-            ControleurREST-->>Proxy: HTTP 401 Unauthorized
-            Proxy-->>ControleurJavaFX: Échec de connexion
+            Service-->>ControleurREST: Erreur « Email ou mot de passe incorrects »
+            ControleurREST-->>Proxy: HTTP 401 Unauthorized {« Email ou mot de passe incorrects »}
+            Proxy-->>ControleurJavaFX: Erreur {« Email ou mot de passe incorrects »}
             ControleurJavaFX-->>Vue: Afficher erreur
-            Vue-->>Utilisateur: « Identifiants incorrects »
+            Vue-->>Utilisateur: « Email ou mot de passe incorrects »
 
         else Mot de passe correct
             Service->>Service: Créer le token
