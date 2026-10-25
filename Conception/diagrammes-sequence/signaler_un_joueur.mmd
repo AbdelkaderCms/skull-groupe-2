@@ -1,0 +1,49 @@
+sequenceDiagram
+    participant U as Utilisateur
+    participant V as Vue
+    participant C as ControleurJavaFX
+    participant P as Proxy
+    participant API as ControleurREST
+    participant S as Service
+    participant R as Repository
+    participant DB as BDD
+
+    U->>V: Cliquer sur « Signaler un joueur »
+    V-->>U: Afficher le formulaire de signalement
+    U->>V: Saisir le motif et la description, puis cliquer sur « Envoyer »
+    V->>C: signaler(idJoueurSignale, motif, description)
+    C->>P: signaler(idJoueurSignale, motif, description)
+    P->>API: POST /signalements<br/>Corps : {idJoueurSignale, motif, description}
+    API->>S: creerSignalement(idJoueurSignale, motif, description)
+    S->>S: Valider les champs du signalement
+
+    alt Champs invalides
+        S-->>API: Erreur de validation des champs
+        API-->>P: HTTP 400 Bad Request
+        P-->>C: Champs invalides
+        C-->>V: Indiquer les champs à corriger
+        V-->>U: Afficher les champs à corriger
+    else Champs valides
+        S->>R: findJoueurById(idJoueurSignale)
+        R->>DB: SELECT * FROM Joueur WHERE id = idJoueurSignale
+        DB-->>R: Résultat de la recherche
+        R-->>S: Joueur trouvé ou inexistant
+
+        alt Joueur inexistant
+            S-->>API: Joueur introuvable
+            API-->>P: HTTP 404 Not Found
+            P-->>C: Joueur introuvable
+            C-->>V: Afficher le message d'erreur
+            V-->>U: « Joueur introuvable »
+        else Joueur trouvé
+            S->>R: enregistrerSignalement(idJoueurSignale, motif, description)
+            R->>DB: INSERT INTO signalement (idJoueurSignale, motif, description, date)<br/>VALUES (idJoueurSignale, motif, description, CURRENT_TIMESTAMP)
+            DB-->>R: Création confirmée + identifiant
+            R-->>S: Identifiant du signalement
+            S-->>API: Signalement créé + identifiant
+            API-->>P: HTTP 201 Created + identifiant
+            P-->>C: Signalement créé + identifiant
+            C-->>V: Afficher la confirmation
+            V-->>U: « Signalement envoyé »
+        end
+    end
