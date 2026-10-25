@@ -1,0 +1,75 @@
+sequenceDiagram
+    participant Utilisateur
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Utilisateur->>Vue: Saisit pseudo, mail et mot de passe
+    Utilisateur->>Vue: Clique sur « S'inscrire »
+
+    Vue->>ControleurJavaFX: inscrire(pseudo, mail, mdp)
+    ControleurJavaFX->>Proxy: inscrire(pseudo, mail, mdp)
+    Proxy->>ControleurREST: POST /membres {pseudo, mail, mdp}
+
+    alt Payload incorrect
+        ControleurREST-->>Proxy: HTTP 400 Bad Request<br/>« Champ requis manquant »
+        Proxy-->>ControleurJavaFX: Erreur<br/>« Champ requis manquant »
+        ControleurJavaFX-->>Vue: Afficher erreur
+        Vue-->>Utilisateur: « Champ requis manquant »
+
+    else Payload complet
+        ControleurREST->>Service: inscrire(pseudo, mail, mdp)
+
+        Service->>Service: Vérifier le format du mot de passe
+
+        alt Format du mot de passe invalide
+            Service-->>ControleurREST: Erreur<br/>« Au moins 8 caractères<br/>Au moins une majuscule<br/>Au moins un caractère spécial »
+            ControleurREST-->>Proxy: HTTP 400 Bad Request<br/>« Au moins 8 caractères<br/>Au moins une majuscule<br/>Au moins un caractère spécial »
+            Proxy-->>ControleurJavaFX: Erreur<br/>« Au moins 8 caractères<br/>Au moins une majuscule<br/>Au moins un caractère spécial »
+            ControleurJavaFX-->>Vue: Afficher erreur
+            Vue-->>Utilisateur: « Au moins 8 caractères<br/>Au moins une majuscule<br/>Au moins un caractère spécial »
+        else Mot de passe valide
+            Service->>Repository: existeParPseudo(pseudo)
+            Repository->>BDD: SELECT membre WHERE pseudo
+            BDD-->>Repository: Pseudo trouvé / non trouvé
+            Repository-->>Service: Résultat de la recherche
+
+            alt Pseudo déjà utilisé
+                Service-->>ControleurREST: Erreur « Pseudo déjà utilisé »
+                ControleurREST-->>Proxy: HTTP 409 Conflict<br/>« Pseudo déjà utilisé »
+                Proxy-->>ControleurJavaFX: Erreur<br/>« Pseudo déjà utilisé »
+                ControleurJavaFX-->>Vue: Afficher erreur
+                Vue-->>Utilisateur: « Pseudo déjà utilisé »
+
+            else Pseudo disponible
+                Service->>Repository: existeParMail(mail)
+                Repository->>BDD: SELECT membre WHERE mail
+                BDD-->>Repository: Mail trouvé / non trouvé
+                Repository-->>Service: Résultat de la recherche
+
+                alt Mail déjà utilisé
+                    Service-->>ControleurREST: Erreur « Mail déjà utilisé »
+                    ControleurREST-->>Proxy: HTTP 409 Conflict<br/>« Mail déjà utilisé »
+                    Proxy-->>ControleurJavaFX: Erreur<br/>« Mail déjà utilisé »
+                    ControleurJavaFX-->>Vue: Afficher erreur
+                    Vue-->>Utilisateur: « Mail déjà utilisé »
+
+                else Mail disponible
+                    Service->>Repository: créerMembre(membre)
+                    Repository->>BDD: INSERT membre
+                    BDD-->>Repository: Membre créé
+                    Repository-->>Service: Membre créé
+
+                    Service-->>ControleurREST: Inscription réussie
+                    ControleurREST-->>Proxy: HTTP 201 Created
+                    Proxy-->>ControleurJavaFX: Inscription réussie
+                    ControleurJavaFX-->>Vue: Afficher confirmation
+                    Vue-->>Utilisateur: « Inscription réussie »
+                end
+            end
+        end
+    end
