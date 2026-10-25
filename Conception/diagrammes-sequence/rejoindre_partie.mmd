@@ -1,0 +1,79 @@
+sequenceDiagram
+    participant Membre
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Membre->>Vue: Sélectionne une partie
+    Membre->>Vue: Clique sur « Rejoindre »
+
+    Vue->>ControleurJavaFX: rejoindrePartie(membreID, idPartie)
+    ControleurJavaFX->>Proxy: rejoindrePartie(membreID, idPartie)
+    Proxy->>ControleurREST: PATCH /parties/{idPartie}/joueur {membreID}
+
+    alt Payload incorrect
+        ControleurREST-->>Proxy: HTTP 400 Bad Request<br/>« Requete incorrect »
+        Proxy-->>ControleurJavaFX: Erreur « Requete incorrect »
+        ControleurJavaFX-->>Vue: Afficher erreur
+        Vue-->>Membre: « Requete incorrect »
+
+    else Payload correct
+        ControleurREST->>Service: rejoindrePartie(idPartie, membreID)
+
+        Service->>Repository: rechercherPartie(idPartie)
+        Repository->>BDD: SELECT Partie WHERE id = idPartie
+        BDD-->>Repository: Partie trouvée / non trouvée
+        Repository-->>Service: Partie
+
+        alt Partie inexistante
+            Service-->>ControleurREST: Erreur « Partie inexistante »
+            ControleurREST-->>Proxy: HTTP 404 Not Found {« Partie inexistante »}
+            Proxy-->>ControleurJavaFX: Erreur {« Partie inexistante »}
+            ControleurJavaFX-->>Vue: Afficher erreur
+            Vue-->>Membre: « Partie inexistante »
+
+        else Partie trouvée
+            Service->>Repository: vérifierEtatPartie(partie)
+            Repository->>BDD: SELECT enCours FROM Partie WHERE id = idPartie
+            BDD-->>Repository: enCours
+            Repository-->>Service: État de la partie
+
+            alt Partie déjà en cours
+                Service-->>ControleurREST: Erreur « Partie déjà en cours »
+                ControleurREST-->>Proxy: HTTP 409 Conflict {« Partie déjà en cours »}
+                Proxy-->>ControleurJavaFX: Erreur {« Partie déjà en cours »}
+                ControleurJavaFX-->>Vue: Afficher erreur
+                Vue-->>Membre: « PArtie déjà en cours »
+
+            else Partie en attente
+                Service->>Repository: rechercherJoueurLibre(idPartie)
+                Repository->>BDD: SELECT Joueur WHERE partieID = idPartie AND membre IS NULL AND IA IS NULL
+                BDD-->>Repository: Joueur libre / aucun joueur libre
+                Repository-->>Service: Joueur libre / aucun joueur libre
+
+                alt Aucun joueur libre
+                    Service-->>ControleurREST: Erreur « Partie complète »
+                    ControleurREST-->>Proxy: HTTP 409 Conflict {« Partie complète »}
+                    Proxy-->>ControleurJavaFX: Erreur {« Partie complète »}
+                    ControleurJavaFX-->>Vue: Afficher erreur
+                    Vue-->>Membre: « Partie complète »
+
+                else Joueur libre trouvé
+                    Service->>Repository: modifierMembreID(joueur, membreID)
+                    Repository->>BDD: UPDATE Joueur SET membreID = membreID
+                    BDD-->>Repository: Joueur modifié
+                    Repository-->>Service: Joueur modifié
+
+                    Service-->>ControleurREST: Joueur ajouté à la partie
+                    ControleurREST-->>Proxy: HTTP 204 No Content
+                    Proxy-->>ControleurJavaFX: Joueur ajouté
+                    ControleurJavaFX-->>Vue: Afficher le lobby
+                    Vue-->>Membre: « Vous avez rejoint la partie »
+                end
+            end
+        end
+    end
