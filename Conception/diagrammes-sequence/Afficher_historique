@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant Membre
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Membre->>Vue: Clique sur « Historique »
+    Vue->>ControleurJavaFX: consulterHistorique()
+    ControleurJavaFX->>Proxy: consulterHistorique()
+    Proxy->>ControleurREST: GET /membres/{id}/historique
+    ControleurREST->>Service: consulterHistorique(idMembre)
+
+    Service->>Repository: trouverHistorique(idMembre)
+    Repository->>BDD: SELECT Partie WHERE membre = idMembre ORDER BY date DESC LIMIT 5
+    BDD-->>Repository: Liste des parties
+    Repository-->>Service: Liste des parties
+
+    alt Aucune partie trouvée
+        Service-->>ControleurREST: Historique vide
+        ControleurREST-->>Proxy: HTTP 204 No content
+        Proxy-->>ControleurJavaFX: Historique vide
+        ControleurJavaFX-->>Vue: Afficher historique vide
+        Vue-->>Membre: « Aucune partie dans votre historique »
+
+    else Parties trouvées
+        Service-->>ControleurREST: Historique
+        ControleurREST-->>Proxy: HTTP 200 OK + historique
+        Proxy-->>ControleurJavaFX: Historique
+        ControleurJavaFX-->>Vue: Afficher historique
+        Vue-->>Membre: Affiche les 5 dernières parties
+    end
