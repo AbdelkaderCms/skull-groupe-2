@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant Membre
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Membre->>Vue: Clique sur « Tableau des scores »
+    Vue->>ControleurJavaFX: consulterScores()
+    ControleurJavaFX->>Proxy: consulterScores()
+    Proxy->>ControleurREST: GET /membres/scores
+    ControleurREST->>Service: consulterScores()
+
+    Service->>Repository: trouverTousLesMembresTriesParPoints()
+    Repository->>BDD: SELECT * FROM Membre ORDER BY points DESC
+    BDD-->>Repository: Liste des membres triée
+    Repository-->>Service: Liste des membres triée
+
+    Service-->>ControleurREST: Liste des scores
+    ControleurREST-->>Proxy: HTTP 200 OK + liste des scores
+    Proxy-->>ControleurJavaFX: Liste des scores
+    ControleurJavaFX-->>Vue: Afficher le classement
+    Vue-->>Membre: Affiche le tableau des scores
