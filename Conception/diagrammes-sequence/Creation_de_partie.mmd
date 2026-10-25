@@ -1,0 +1,72 @@
+sequenceDiagram
+    participant Membre
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Membre->>Vue: Choisit nbJoueurs et nbIA
+    Membre->>Vue: Clique sur « Créer une partie »
+
+    Vue->>ControleurJavaFX: creerPartie(nbJoueurs, nbIA)
+    ControleurJavaFX->>Proxy: creerPartie(nbJoueurs, nbIA)
+    Proxy->>ControleurREST: POST /parties {nbJoueurs, nbIA}
+
+    alt Champ manquant dans le payload
+        ControleurREST-->>Proxy: HTTP 400 Bad Request {"Champ manquant"}
+        Proxy-->>ControleurJavaFX: Erreur  {"Champ manquant"}
+        ControleurJavaFX-->>Vue: Afficher erreur
+        Vue-->>Membre: "Champ obligatoire manquant"
+
+    else Payload complet
+        ControleurREST->>Service: creerPartie(nbJoueurs, nbIA)
+
+        Service->>Service: Vérifier les paramètres
+
+        alt Paramètres invalides
+            Service-->>ControleurREST: Erreur « Paramètres invalides »
+            ControleurREST-->>Proxy: HTTP 400 Bad Request {« Paramètres invalides »}
+            Proxy-->>ControleurJavaFX: Erreur {« Paramètres invalides »}
+            ControleurJavaFX-->>Vue: Afficher erreur
+            Vue-->>Membre: « Paramètres invalides »
+
+        else Paramètres valides
+
+            Service->>Repository: créerPartie(nbJoueurs, nbIA)
+            Repository->>BDD: INSERT Partie
+            BDD-->>Repository: Partie créée
+            Repository-->>Service: Partie créée
+
+            Service->>Repository: créerJoueurs(partieId)
+            Repository->>BDD: INSERT Joueur
+            BDD-->>Repository: Joueur créé
+            Repository-->>Service: Joueur créé
+
+            Service->>Repository: assignerMembre(partieId, joueurId)
+            Repository->>BDD: INSERT Joueur
+            BDD-->>Repository: Membre assigné
+            Repository-->>Service: Membre asigné
+
+            loop Pour chaque IA demandée
+                Service->>Repository: créerIA()
+                Repository->>BDD: INSERT IA
+                BDD-->>Repository: IA créée
+                Repository-->>Service: IA créée
+
+                Service->>Repository: assignerJoueur(partieId, pseudo)
+                Repository->>BDD: INSERT Joueur
+                BDD-->>Repository: Joueur assigné
+                Repository-->>Service: Joueur assigné
+            end
+
+            Service-->>ControleurREST: Partie créée
+            ControleurREST-->>Proxy: HTTP 201 Created
+            Proxy-->>ControleurJavaFX: Partie créée
+            ControleurJavaFX-->>Vue: Afficher le lobby
+            Vue-->>Membre: Affiche la partie créée
+
+        end
+    end
