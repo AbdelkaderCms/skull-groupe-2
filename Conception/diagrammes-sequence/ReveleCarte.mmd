@@ -1,0 +1,75 @@
+sequenceDiagram
+    actor Utilisateur
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    %% Révéler une carte (paramètres : partieId, mancheId, joueurId)
+    Utilisateur->>Vue: Clique sur Révéler
+    Vue->>ControleurJavaFX: revelerTuile(partieId, mancheId, joueurId)
+    ControleurJavaFX->>Proxy: revelerTuile(partieId, mancheId, joueurId)
+    Proxy->>ControleurREST: POST /parties/{partieId}/manches/{mancheId}/revelations {joueurId}
+    ControleurREST->>Service: revelerTuile(partieId, mancheId, joueurId)
+
+    Service->>Repository: rechercherManche(partieId, mancheId)
+    Repository->>BDD: SELECT manche, piles et défi
+    BDD-->>Repository: Manche trouvée / non trouvée
+    Repository-->>Service: Résultat de la recherche
+
+    alt Partie ou manche introuvable
+        Service-->>ControleurREST: Erreur « Partie ou manche introuvable »
+        ControleurREST-->>Proxy: HTTP 404 Not Found
+        Proxy-->>ControleurJavaFX: Erreur
+        ControleurJavaFX-->>Vue: Afficher l'erreur
+        Vue-->>Utilisateur: Affiche l'erreur
+    else Manche trouvée
+        Service->>Service: Vérifier que le joueur est le challenger
+        Service->>Service: Vérifier la phase de résolution du défi
+        %% Sans proprietaireId, c'est le service qui choisit : sa pile d'abord, puis les autres
+        Service->>Service: Déterminer la prochaine tuile à révéler
+
+        alt Révélation non autorisée
+            Service-->>ControleurREST: Erreur « Révélation impossible »
+            ControleurREST-->>Proxy: HTTP 409 Conflict
+            Proxy-->>ControleurJavaFX: Erreur
+            ControleurJavaFX-->>Vue: Afficher l'erreur
+            Vue-->>Utilisateur: Affiche le motif du refus
+        else Révélation autorisée
+            Service->>Service: Révéler la tuile (estCachee = faux)
+
+            %% Le front a besoin du set et de la tuile pour l'affichage
+            Service->>Repository: rechercherSetDeLaTuile(tuile)
+            Repository->>BDD: SELECT set de la tuile
+            BDD-->>Repository: Set trouvé
+            Repository-->>Service: Set de la tuile
+
+            alt La tuile est un crâne
+                Service->>Service: Marquer le défi comme échoué
+                Note over Service: Déclenche la fin de manche (voir diagramme Fin de manche)
+            else La tuile est une fleur
+                Service->>Service: Augmenter le nombre de fleurs révélées
+
+                alt Objectif du défi atteint
+                    Service->>Service: Marquer le défi comme réussi
+                    Note over Service: Déclenche la fin de manche (voir diagramme Fin de manche)
+                else Objectif non atteint
+                    Service->>Service: Autoriser la prochaine révélation
+                end
+            end
+
+            Service->>Repository: sauvegarderManche(manche)
+            Repository->>BDD: UPDATE tuile (estCachee) et état du défi
+            BDD-->>Repository: Modifications enregistrées
+            Repository-->>Service: Manche mise à jour
+
+            Service-->>ControleurREST: Tuile révélée, son set et état du défi
+            ControleurREST-->>Proxy: HTTP 200 OK
+            Proxy-->>ControleurJavaFX: Tuile et set reçus
+            ControleurJavaFX-->>Vue: Afficher la tuile avec son set
+            Vue-->>Utilisateur: Affiche la tuile révélée
+        end
+    end
