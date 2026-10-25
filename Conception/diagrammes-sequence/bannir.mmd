@@ -1,0 +1,51 @@
+sequenceDiagram
+    participant Admin
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Admin->>Vue: Sélectionne un membre à bannir
+    Admin->>Vue: Clique sur « Bannir »
+
+    Vue->>ControleurJavaFX: bannirMembre(idMembre)
+    ControleurJavaFX->>Proxy: bannirMembre(idMembre)
+    Proxy->>ControleurREST: PATCH /membres/{idMembre} {estBanni:true}
+
+    alt Payload incorrect
+        ControleurREST-->>Proxy: HTTP 400 Bad Request<br/>« Requete invalide »
+        Proxy-->>ControleurJavaFX: Erreur<br/>« Requete invalide »
+        ControleurJavaFX-->>Vue: Afficher erreur
+        Vue-->>Admin: « Requete invalide »
+
+    else Payload complet
+        ControleurREST->>Service: bannirMembre(idMembre)
+
+        Service->>Repository: rechercherParId(idMembre)
+        Repository->>BDD: SELECT membre WHERE id = idMembre
+        BDD-->>Repository: Membre trouvé / non trouvé
+        Repository-->>Service: Membre
+
+        alt Membre inexistant
+            Service-->>ControleurREST: Erreur « Membre inexistant »
+            ControleurREST-->>Proxy: HTTP 404 Not Found {« Membre inexistant »}
+            Proxy-->>ControleurJavaFX: Erreur {« Membre inexistant »}
+            ControleurJavaFX-->>Vue: Afficher erreur
+            Vue-->>Admin: « Membre inexistant »
+
+        else Membre trouvé
+            Service->>Repository: bannir(membre)
+            Repository->>BDD: UPDATE membre SET estBanni = true
+            BDD-->>Repository: Membre modifié
+            Repository-->>Service: Membre banni
+
+            Service-->>ControleurREST: Bannissement réussi
+            ControleurREST-->>Proxy: HTTP 204 No Content
+            Proxy-->>ControleurJavaFX: Bannissement réussi
+            ControleurJavaFX-->>Vue: Afficher confirmation
+            Vue-->>Admin: « Membre banni »
+        end
+    end
