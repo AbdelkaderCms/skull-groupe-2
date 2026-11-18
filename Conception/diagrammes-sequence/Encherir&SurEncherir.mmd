@@ -1,0 +1,102 @@
+sequenceDiagram
+    actor Utilisateur
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    %% ETAPE 1 : consulter l'enchère courante pour connaître le minimum
+    Note over Utilisateur,BDD: Étape 1 : consulter l'enchère courante
+    Utilisateur->>Vue: Ouvre la saisie d'enchère
+    Vue->>ControleurJavaFX: consulterEnchereCourante(partieId, mancheId)
+    ControleurJavaFX->>Proxy: consulterEnchereCourante(partieId, mancheId)
+    Proxy->>ControleurREST: GET /parties/{partieId}/manches/{mancheId}/encheres/courante
+    ControleurREST->>Service: enchereCourante(partieId, mancheId)
+    Service->>Repository: rechercherDerniereEnchere(mancheId)
+    Repository->>BDD: SELECT dernier coup Enchere de la manche
+    BDD-->>Repository: Enchère trouvée / aucune
+    Repository-->>Service: Résultat de la recherche
+
+    alt Manche introuvable
+        Service-->>ControleurREST: Erreur « Manche introuvable »
+        ControleurREST-->>Proxy: HTTP 404 Not Found
+        Proxy-->>ControleurJavaFX: Erreur
+        ControleurJavaFX-->>Vue: Afficher l'erreur
+        Vue-->>Utilisateur: Affiche l'erreur
+    else Manche trouvée
+        alt Aucune enchère (première enchère)
+            Service->>Service: Enchère minimale = 1
+        else Une enchère existe déjà
+            Service->>Service: Enchère minimale = valeur courante + 1
+        end
+        Service-->>ControleurREST: Enchère courante et enchère minimale
+        ControleurREST-->>Proxy: HTTP 200 OK
+        Proxy-->>ControleurJavaFX: Enchère courante et minimale
+        ControleurJavaFX-->>Vue: Afficher le minimum possible
+        Vue-->>Utilisateur: Affiche l'enchère minimale
+    end
+
+    %% ETAPE 2 : envoyer l'enchère (paramètres : partieId, mancheId, joueurId, valeur)
+    Note over Utilisateur,BDD: Étape 2 : envoyer l'enchère
+    Utilisateur->>Vue: Saisit la valeur de l'enchère
+    Utilisateur->>Vue: Clique sur Enchérir
+    Vue->>ControleurJavaFX: encherir(partieId, mancheId, joueurId, valeur)
+    ControleurJavaFX->>Proxy: encherir(partieId, mancheId, joueurId, valeur)
+    Proxy->>ControleurREST: POST /parties/{partieId}/manches/{mancheId}/encheres {joueurId, valeur}
+    ControleurREST->>Service: encherir(partieId, mancheId, joueurId, valeur)
+
+    Service->>Repository: rechercherManche(partieId, mancheId)
+    Repository->>BDD: SELECT manche, coups et tuiles posées
+    BDD-->>Repository: Manche trouvée / non trouvée
+    Repository-->>Service: Résultat de la recherche
+
+    alt Partie ou manche introuvable
+        Service-->>ControleurREST: Erreur « Partie ou manche introuvable »
+        ControleurREST-->>Proxy: HTTP 404 Not Found
+        Proxy-->>ControleurJavaFX: Erreur
+        ControleurJavaFX-->>Vue: Afficher l'erreur
+        Vue-->>Utilisateur: Affiche l'erreur
+    else Manche trouvée
+        Service->>Service: Vérifier le tour et la phase de jeu
+        Service->>Service: Vérifier que le joueur n'a pas passé
+        Service->>Service: Vérifier la valeur (au moins le minimum, au plus le total des tuiles posées)
+
+        alt Enchère non autorisée
+            Service-->>ControleurREST: Erreur « Enchère impossible »
+            ControleurREST-->>Proxy: HTTP 409 Conflict
+            Proxy-->>ControleurJavaFX: Erreur
+            ControleurJavaFX-->>Vue: Afficher l'erreur
+            Vue-->>Utilisateur: Affiche le motif du refus
+        else Enchère autorisée
+            %% Dans le UML, Enchere est un type de Coup avec une valeur
+            Service->>Service: Créer le coup Enchere (valeur)
+
+            alt Première enchère
+                Service->>Service: Passer la manche en phase d'enchères
+            else Surenchère
+                Service->>Service: Enregistrer la surenchère à la suite des enchères
+            end
+
+            alt Enchère égale au total des tuiles posées
+                Service->>Service: Terminer les enchères
+                Service->>Service: Désigner le challenger (estChallengerDe)
+                Service->>Service: Passer à la résolution du défi
+            else Enchères encore possibles
+                Service->>Service: Passer au joueur suivant
+            end
+
+            Service->>Repository: sauvegarderCoup(enchere)
+            Repository->>BDD: INSERT coup Enchere et UPDATE manche
+            BDD-->>Repository: Modifications enregistrées
+            Repository-->>Service: Enchère enregistrée
+
+            Service-->>ControleurREST: Nouvel état de la manche
+            ControleurREST-->>Proxy: HTTP 200 OK
+            Proxy-->>ControleurJavaFX: Enchère enregistrée
+            ControleurJavaFX-->>Vue: Actualiser la table
+            Vue-->>Utilisateur: Affiche l'enchère annoncée
+        end
+    end

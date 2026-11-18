@@ -1,0 +1,49 @@
+sequenceDiagram
+    participant Utilisateur
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Utilisateur->>Vue: Saisit son pseudo et son mot de passe
+    Utilisateur->>Vue: Clique sur « Se connecter »
+
+    Vue->>ControleurJavaFX: connecter(pseudo, mdp)
+    ControleurJavaFX->>Proxy: connecter(pseudo, mdp)
+    Proxy->>ControleurREST: POST /login {pseudo, mdp}
+    ControleurREST->>Service: connecter(pseudo, mdp)
+
+    Service->>Repository: rechercherParPseudo(pseudo)
+    Repository->>BDD: SELECT membre WHERE pseudo
+    BDD-->>Repository: Membre trouvé / non trouvé
+    Repository-->>Service: Résultat de la recherche + hash mdp
+
+    alt Membre inexistant
+        Service-->>ControleurREST: Erreur « Email ou mot de passe incorrects »
+        ControleurREST-->>Proxy: HTTP 401 Unauthorized {« Email ou mot de passe incorrects »}
+        Proxy-->>ControleurJavaFX: Erreur « Email ou mot de passe incorrects »
+        ControleurJavaFX-->>Vue: Afficher erreur
+        Vue-->>Utilisateur: « Email ou mot de passe incorrects »
+
+    else Membre trouvé
+        Service->>Service: Vérifier le mot de passe avec le hash
+
+        alt Mot de passe incorrect
+            Service-->>ControleurREST: Erreur « Email ou mot de passe incorrects »
+            ControleurREST-->>Proxy: HTTP 401 Unauthorized {« Email ou mot de passe incorrects »}
+            Proxy-->>ControleurJavaFX: Erreur {« Email ou mot de passe incorrects »}
+            ControleurJavaFX-->>Vue: Afficher erreur
+            Vue-->>Utilisateur: « Email ou mot de passe incorrects »
+
+        else Mot de passe correct
+            Service->>Service: Créer le token
+            Service-->>ControleurREST: Connexion réussie + token
+            ControleurREST-->>Proxy: HTTP 200 OK + token
+            Proxy-->>ControleurJavaFX: Connexion réussie + token
+            ControleurJavaFX-->>Vue: Ouvrir l'interface principale
+            Vue-->>Utilisateur: Affiche l'interface principale
+        end
+    end

@@ -1,0 +1,60 @@
+sequenceDiagram
+    participant Membre
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Membre->>Vue: Clique sur « Quitter la partie »
+
+    Vue->>ControleurJavaFX: quitterPartie(partieId, joueurId)
+    ControleurJavaFX->>Proxy: quitterPartie(partieId, joueurId)
+    Proxy->>ControleurREST: PATCH /parties/{partieId}/joueurs/{joueurId}
+
+    ControleurREST->>ControleurREST: Récupérer membreID depuis le token
+
+    ControleurREST->>Service: quitterPartie(partieId, joueurId, membreID)
+
+    Service->>Repository: rechercherJoueur(partieId, joueurId)
+    Repository->>BDD: SELECT Joueur WHERE partieID AND joueurID
+    BDD-->>Repository: Joueur trouvé / non trouvé
+    Repository-->>Service: Joueur
+
+    alt Joueur inexistant dans cette partie
+        Service-->>ControleurREST: Erreur « Joueur inexistant »
+        ControleurREST-->>Proxy: HTTP 404 Not Found {« Joueur inexistant »}
+        Proxy-->>ControleurJavaFX: Erreur {« Joueur inexistant »}
+        ControleurJavaFX-->>Vue: Afficher erreur
+        Vue-->>Membre: « Joueur inexistant »
+
+    else Joueur trouvé
+        Service->>Service: Vérifier que le joueur appartient au membre
+
+        alt Joueur n'appartient pas au membre
+            Service-->>ControleurREST: Erreur « Accès refusé »
+            ControleurREST-->>Proxy: HTTP 403 Forbidden {« Accès refusé »}
+            Proxy-->>ControleurJavaFX: Erreur {« Accès refusé »}
+            ControleurJavaFX-->>Vue: Afficher erreur
+            Vue-->>Membre: « Vous ne contrôlez pas ce joueur »
+
+        else Joueur appartenant au membre
+            Service->>Repository: créerIA()
+            Repository->>BDD: INSERT IA
+            BDD-->>Repository: IA créée
+            Repository-->>Service: IA créée
+
+            Service->>Repository: remplacerMembreParIA(joueur, IA)
+            Repository->>BDD: UPDATE Joueur SET membreID = NULL, IA = idIA
+            BDD-->>Repository: Joueur modifié
+            Repository-->>Service: Joueur modifié
+
+            Service-->>ControleurREST: Partie quittée
+            ControleurREST-->>Proxy: HTTP 204 No Content
+            Proxy-->>ControleurJavaFX: Partie quittée
+            ControleurJavaFX-->>Vue: Retour à l'accueil
+            Vue-->>Membre: « Vous avez quitté la partie »
+        end
+    end

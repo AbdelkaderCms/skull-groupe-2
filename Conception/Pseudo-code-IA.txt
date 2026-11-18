@@ -1,0 +1,41 @@
+
+Entrée/sortie : état du jeu, action de l'IA
+
+Variables :
+    choix, enchereActuelle, nombreTuilesPosees : entiers
+
+Début
+
+    Si aucune enchère n'est en cours alors :
+        Si l'IA peut encore poser une tuile alors :
+            choix ← aléatoire(1, 100)
+            Si choix ≤ 80 alors :
+                Ajouter une tuile aléatoire
+            Sinon :
+                enchereActuelle ← nombreTuilesPosees
+                Lancer une enchère
+            Fin si
+        Sinon :
+            Lancer une enchère égale au nombre de tuiles posées
+        Fin si
+
+    Sinon :
+        choix ← aléatoire(1, 100)
+        Si l'IA n'a posé que des fleurs alors :
+            Si choix ≤ 70 alors :
+                enchereActuelle ← enchereActuelle + 1
+                Surenchérir
+            Sinon :
+                Se retirer
+            Fin si
+        Sinon :
+            Si choix ≤ 20 alors :
+                enchereActuelle ← enchereActuelle + 1
+                Surenchérir
+            Sinon :
+                Se retirer
+            Fin si
+        Fin si
+    Fin si
+
+Fin

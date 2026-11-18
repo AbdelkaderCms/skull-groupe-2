@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor Utilisateur
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    Note over Service: Déclenchée par la fin de manche quand la partie est terminée
+
+    Service->>Service: Déterminer le vainqueur (2 manches gagnées ou dernier joueur avec des tuiles)
+    %% Statut TERMINEE sur la partie (voir la remarque sur le UML)
+    Service->>Service: Mettre le statut de la partie à TERMINEE
+    %% Règle à définir en groupe : combien de points et de monnaie
+    Service->>Service: Calculer les points et la monnaie des joueurs concernés
+
+    Service->>Repository: sauvegarderFinDePartie(partie, vainqueur, joueurs)
+    Repository->>BDD: UPDATE partie (statut), lien gagne, UPDATE membres (points, monnaie)
+    BDD-->>Repository: Modifications enregistrées
+    Repository-->>Service: Fin de partie enregistrée
+
+    Service-->>ControleurREST: Résultat final et vainqueur
+
+    %% Le résultat est envoyé à tous les joueurs de la partie (observable)
+    Note over ControleurREST,Proxy: Notification envoyée à chaque joueur de la partie
+    ControleurREST-->>Proxy: Événement « partie terminée » avec le résultat
+    Proxy-->>ControleurJavaFX: Résultat de la partie
+    ControleurJavaFX-->>Vue: Afficher le résultat
+    Vue-->>Utilisateur: Affiche le vainqueur et les scores

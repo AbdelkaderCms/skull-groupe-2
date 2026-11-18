@@ -1,0 +1,28 @@
+  Au cours de ce livrable, nous avons eu l’occasion de réaliser un diagramme UML nous permettant de prévoir le format de nos données ainsi que leurs interactions.
+En parallèle, nous avons réalisé différents diagrammes de séquence qui nous ont permis de prévoir les comportements des différents interlocuteurs logiques lors des actions
+possibles de la part d’un utilisateur. Ces diagrammes ont ensuite mené à la réalisation des contrats d’API. Ces contrats d’API nous seront essentiels aussi bien pour anticiper
+les choix concernant le développement du back end que sur la décision du format des données fournies au front end. 
+  
+  Ce livrable nous a également permis d’anticiper les choix esthétiques de notre application. Tout d’abord, nous avons réalisé des maquettes au brouillon qui ont ensuite été 
+mises au propre afin d’avoir une idée claire sur le fonctionnement de notre application et les différentes vues à réaliser dans le frontend. Nous avons également choisi le 
+thème visuel de notre application: les animaux. Le marketplace proposera différents sets de tuiles. Les tuiles qui représentent habituellement des fleurs dans le jeu Skull
+seront trois animaux différents d’un même milieu naturel (forêt, océan, savane…) et la tuile représentant le crâne sera un élément du milieu naturel de ces animaux
+(feuille, coquillage, arbre…).
+ 
+  Pour ce qui est des tests, nous avons prévu de réaliser différents types de tests:
+  -Des tests d’API, nous permettant de tester, pour une requête http donnée, si le résultat est bien celui attendu
+  -Des tests unitaires, nous permettant de tester les fonctions logiques de notre application
+  -Des tests end-to-end avec Sélénium, nous permettant de tester l’application dans sa globalité en imitant de manière automatique (en créant des scénarios) le comportement de l’utilisateur afin d’évaluer si l’application se comporte de manière attendue
+	
+  Enfin, nous avons produit un algorithme en pseudocode pour déterminer le comportement de l’IA qui pourra faire partie des joueurs lors des parties. Cet algorithme sera ensuite produit dans le langage de programmation utilisé (Java) lors du prochain livrable et sera inclus dans l’application globale.
+	
+	Pour conclure, ce livrable nous à permis de produire les documents suivants:
+    -Diagramme UML
+    -Diagrammes de séquences
+    -Maquettes des vues
+    -Algorithme de l’IA en pseudocode
+    -Contrats API
+	
+	Ces documents seront éventuellement amenés à évoluer au cours du développement suite aux adaptations nécessaires résultant des imprévus de ce livrable.
+ 
+	

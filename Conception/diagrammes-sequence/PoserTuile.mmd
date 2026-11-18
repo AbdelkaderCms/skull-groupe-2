@@ -1,0 +1,64 @@
+sequenceDiagram
+    actor Utilisateur
+    participant Vue
+    participant ControleurJavaFX
+    participant Proxy
+    participant ControleurREST
+    participant Service
+    participant Repository
+    participant BDD
+
+    %% Poser une tuile (paramètres : partieId, mancheId, tuileId, joueurId)
+    Utilisateur->>Vue: Sélectionne une tuile (fleur ou crâne)
+    Utilisateur->>Vue: Clique sur Poser
+    Vue->>ControleurJavaFX: poserTuile(partieId, mancheId, tuileId, joueurId)
+    ControleurJavaFX->>Proxy: poserTuile(partieId, mancheId, tuileId, joueurId)
+    Proxy->>ControleurREST: POST /parties/{partieId}/manches/{mancheId}/tuiles {joueurId, tuileId}
+    ControleurREST->>Service: poserTuile(partieId, mancheId, tuileId, joueurId)
+
+    %% Chargement de la manche, de ses coups et des tuiles du joueur
+    Service->>Repository: rechercherManche(partieId, mancheId)
+    Repository->>BDD: SELECT manche, coups et tuiles du joueur
+    BDD-->>Repository: Manche trouvée / non trouvée
+    Repository-->>Service: Résultat de la recherche
+
+    alt Partie ou manche introuvable
+        Service-->>ControleurREST: Erreur « Partie ou manche introuvable »
+        ControleurREST-->>Proxy: HTTP 404 Not Found
+        Proxy-->>ControleurJavaFX: Erreur
+        ControleurJavaFX-->>Vue: Afficher l'erreur
+        Vue-->>Utilisateur: Affiche l'erreur
+    else Manche trouvée
+        %% Les trois vérifications demandées
+        Service->>Service: Vérifier que le joueur possède la tuile
+        Service->>Service: Vérifier qu'aucune enchère n'est en cours
+        Service->>Service: Vérifier que c'est le tour du joueur
+
+        alt Pose non autorisée
+            Service-->>ControleurREST: Erreur « Pose impossible »
+            ControleurREST-->>Proxy: HTTP 409 Conflict
+            Proxy-->>ControleurJavaFX: Erreur
+            ControleurJavaFX-->>Vue: Afficher l'erreur
+            Vue-->>Utilisateur: Affiche le motif du refus
+        else Pose autorisée
+            %% Dans le UML, PoseTuile est un type de Coup
+            Service->>Service: Créer le coup PoseTuile (joueur, tuile)
+            Service->>Service: Mettre la tuile face cachée (estCachee = vrai)
+            Service->>Service: Passer au joueur suivant
+
+            opt Le joueur suivant est une IA
+                Service->>Service: Faire jouer l'IA (sa stratégie)
+            end
+
+            Service->>Repository: sauvegarderCoup(poseTuile)
+            Repository->>BDD: INSERT coup PoseTuile et UPDATE tuile (estCachee)
+            BDD-->>Repository: Modifications enregistrées
+            Repository-->>Service: Coup enregistré
+
+            Service-->>ControleurREST: Nouvel état de la manche
+            ControleurREST-->>Proxy: HTTP 200 OK
+            Proxy-->>ControleurJavaFX: Pose réussie
+            ControleurJavaFX-->>Vue: Actualiser la table
+            Vue-->>Utilisateur: Affiche la tuile face cachée
+        end
+    end
