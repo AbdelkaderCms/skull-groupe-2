@@ -40,4 +40,10 @@ public class PartieService {
     public List<Partie> listerParties(){
         return partieRepository.findAll();
     }
+
+    // Retrouve une partie par son id
+    public Partie trouverPartie(Long id){
+        return partieRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Partie introuvable") ) ;
+    }
 }

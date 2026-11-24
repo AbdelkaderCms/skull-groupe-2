@@ -1,6 +1,7 @@
 package skullgroupe2.skullgroupe2.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,14 +22,22 @@ public class PartieController {
         this.service = service;
     }
 
+    // POST /parties?nbJoueurs=3&nbIA=1 : crée une partie
     @PostMapping 
     public Partie ajouter(@RequestParam Integer nbJoueurs, @RequestParam Integer nbIA){
         return service.creerPartie(nbJoueurs, nbIA);
     }
 
 
+    // GET /parties : retourne la liste de toutes les parties
     @GetMapping 
     public List<Partie> lister(){
         return service.listerParties();
+    }
+
+    // GET /parties/5 : retourne la partie numéro 5
+    @GetMapping("/{id}")
+    public Partie trouver(@PathVariable Long id){
+        return service.trouverPartie(id);
     }
 }
