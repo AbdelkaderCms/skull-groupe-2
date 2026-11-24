@@ -6,6 +6,7 @@ import skullgroupe2.skullgroupe2.entity.Partie;
 import skullgroupe2.skullgroupe2.repository.PartieRepository;
 import java.time.LocalDate;
 import java.util.List;
+import skullgroupe2.skullgroupe2.exception.RessourceIntrouvableException;
 
 
 // Service de Partie : contient les règles du jeu liées aux parties
@@ -44,7 +45,7 @@ public class PartieService {
     // Retrouve une partie par son id
     public Partie trouverPartie(Long id){
         return partieRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Partie introuvable") ) ;
+                        .orElseThrow(() -> new RessourceIntrouvableException("Partie introuvable") ) ;
     }
 
     
@@ -55,7 +56,7 @@ public class PartieService {
 
     // Supprime une partie, ou lance une erreur 404 si elle n'existe pas
     public void supprimerPartie(Long id) {
-        Partie partie = trouverPartie(id); 
+        Partie partie = trouverPartie(id); // lance l'erreur si introuvable
         partieRepository.delete(partie);
     }
 }

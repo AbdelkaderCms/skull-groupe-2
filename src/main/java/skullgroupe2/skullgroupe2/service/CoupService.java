@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import skullgroupe2.skullgroupe2.entity.Coup;
+import skullgroupe2.skullgroupe2.exception.RessourceIntrouvableException;
 import skullgroupe2.skullgroupe2.repository.CoupRepository;
 
 // Service de Coup : lecture des coups (la création viendra avec Passe, Enchere et PoseTuile)
@@ -25,6 +26,6 @@ public class CoupService {
     // Retrouve un coup par son id, ou lance une erreur s'il n'existe pas
     public Coup trouverCoup(Long id) {
         return coupRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Coup introuvable"));
+            .orElseThrow(() -> new RessourceIntrouvableException("Tuile introuvable"));
     }
 }
