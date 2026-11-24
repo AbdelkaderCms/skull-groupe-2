@@ -46,4 +46,16 @@ public class PartieService {
         return partieRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Partie introuvable") ) ;
     }
+
+    
+    // Retourne l'historique : toutes les parties, de la plus récente à la plus ancienne
+    public List<Partie> historique() {
+        return partieRepository.findAllByOrderByDateDescIdDesc();
+    }
+
+    // Supprime une partie, ou lance une erreur 404 si elle n'existe pas
+    public void supprimerPartie(Long id) {
+        Partie partie = trouverPartie(id); 
+        partieRepository.delete(partie);
+    }
 }
