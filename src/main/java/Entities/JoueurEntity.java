@@ -9,13 +9,13 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class JoueurEntity {
     @Id
-    private Integer id;
+    private Long id;
     private String pseudo;
 
     @ManyToOne
     private SetEntity setEntity;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -23,7 +23,7 @@ public class JoueurEntity {
         return pseudo;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
