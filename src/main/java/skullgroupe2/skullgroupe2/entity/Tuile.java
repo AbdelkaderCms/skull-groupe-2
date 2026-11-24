@@ -15,5 +15,21 @@ public class Tuile {
     private boolean estCachee ; // colonne booléenne : la tuile est-elle face cachée ?
 
     
-    
+    //getters
+
+    public Long getId() {
+        return id; 
+    }
+
+    public boolean isEstCachee() { 
+        return estCachee;
+    }
+
+
+    //setters
+
+    public void setEstCachee(boolean estCachee) {
+        this.estCachee = estCachee;
+    }
+
 }

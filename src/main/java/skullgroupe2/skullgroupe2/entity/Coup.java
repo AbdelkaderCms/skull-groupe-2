@@ -21,6 +21,23 @@ public abstract class Coup {
     @ManyToOne
     private Membre membre;
 
+
+    //getters
+
+    public Long getId() {
+        return id; 
+    }
+
+
+    public Membre getMembre() {
+        return membre;
+    }
+
+    //setters
+    
+    public void setMembre(Membre membre) {
+        this.membre = membre;
+    }
     
 }
 
