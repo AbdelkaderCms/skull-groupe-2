@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+
 @Entity 
 public class Partie {
 
@@ -35,6 +36,64 @@ public class Partie {
     @ManyToOne 
     private Joueur gagnant;
 
+
+    // getters 
+
+    public  Long getId(){
+        return id;
+    }
+
+
+    public Integer getNbJoueurs(){
+        return nbJoueurs;
+    }
+
+    public Integer getNbIA(){
+        return nbIA;
+    }
+
+    public LocalDate getDate(){
+        return date;
+    }
+
+    public List<Manche> getManches(){
+        return manches;
+    }
+
+    public List<Joueur> getJoueurs(){
+        return joueurs;
+    }
+
+    public Joueur getGagnant(){
+        return gagnant;
+    }
+
+
+    //Seters
+
+    public void setNbJoueurs (Integer nbJoueurs){
+        this.nbJoueurs = nbJoueurs;
+    }
+
+    public void setNbIA (Integer nbIA){
+        this.nbIA = nbIA;
+    }
+
+    public void setDate(LocalDate date){
+        this.date = date;
+    }
+
+    public void setManches(List<Manche> manches){
+        this.manches = manches;
+    }
+
+    public void setJoueurs(List<Joueur> joueurs){
+        this.joueurs = joueurs;
+    }
+
+    public void setGagnant(Joueur gagnant){
+        this.gagnant = gagnant;
+    }
 
     
 }
