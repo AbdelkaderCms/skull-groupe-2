@@ -7,7 +7,7 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    //404
+    //400
     public ProblemDetail handleInvalidPayload(InvalidPayloadException exception){
         ProblemDetail problem= ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,

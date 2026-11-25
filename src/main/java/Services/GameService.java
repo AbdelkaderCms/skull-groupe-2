@@ -1,7 +1,5 @@
 package Services;
-
 import DTOs.CreerPartieDTO;
-import Entities.JoueurEntity;
 import Entities.PartieEntity;
 import Exceptions.InvalidPayloadException;
 import Repositories.JoueurRepository;
@@ -21,6 +19,8 @@ public class GameService {
         this.joueurRepository = joueurRepository;
         this.partieRepository = partieRepository;
     }
+
+
     @Transactional
     public PartieEntity creePartie(CreerPartieDTO dto, String pseudo) throws InvalidPayloadException {
         if(dto.getNbJoueurs()>6 || dto.getNbJoueurs()<3){

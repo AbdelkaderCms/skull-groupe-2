@@ -15,7 +15,7 @@ public class CreerPartieResponseMapper {
             return null;
         }
         Set<JoueurEntity> joueurListe= entity.getJoueurs();
-        Set<String> nomsListe = new HashSet<>();        ;
+        Set<String> nomsListe = new HashSet<>();
         for (JoueurEntity joueur : joueurListe) {
             nomsListe.add(joueur.getPseudo());
         }

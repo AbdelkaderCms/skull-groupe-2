@@ -1,3 +1,4 @@
+
 sequenceDiagram
     actor U as Utilisateur
     participant V as Vue
@@ -9,42 +10,73 @@ sequenceDiagram
     participant DB as BDD
 
     V-->>U: Afficher les aspects et leurs prix en pièces
-    U->>V: Choisir un aspect au prix affiché
+    U->>V: Choisir un aspect
     V->>C: demandeAchat(idAspect)
     C->>P: demandeAchat(idAspect)
-    P->>API: POST /aspects/{idAspect}/achat
-    API->>S: acheterAspect(idUtilisateur, idAspect)
+    P->>API: PATCH /aspects/{idAspect}/achat
 
-    S->>R: recupererPrixAspect(idAspect)
-    R->>DB: Récupérer le prix de l'aspect
-    DB-->>R: Prix en pièces
-    R-->>S: Prix en pièces
-    S->>R: recupererSolde(idUtilisateur)
-    R->>DB: Récupérer le solde du joueur
-    DB-->>R: Solde en pièces
-    R-->>S: Solde en pièces
-    S->>S: Comparer le solde au prix de l'aspect
+    API->>API: Vérifier l'authentification
 
-    alt Solde insuffisant : solde < prix
-        Note over S,DB: ACHAT BLOQUÉ<br/>Aucun débit et aucun déblocage de l'aspect
-        S-->>API: Achat refusé : Solde insuffisant
-        API-->>P: HTTP 409 Conflict + motif « Solde insuffisant »
-        P-->>C: Achat refusé : Solde insuffisant
+    alt Joueur non connecté
+        API-->>P: HTTP 401 Unauthorized
+        P-->>C: Authentification requise
         C-->>V: Afficher le refus
-        V-->>U: « Pas assez de pièces, achat impossible »
-    else Solde suffisant : solde >= prix
-        S->>R: effectuerAchat(idUtilisateur, idAspect, prix)
-        R->>DB: Début de transaction
-        R->>DB: Débiter les pièces : solde = solde - prix
-        DB-->>R: Nouveau solde en pièces
-        R->>DB: Enregistrer le déblocage de l'aspect pour tous les joueurs
-        DB-->>R: Aspect débloqué
-        R->>DB: Valider la transaction
-        DB-->>R: Achat enregistré
-        R-->>S: Achat effectué + nouveau solde en pièces
-        S-->>API: Aspect acheté + nouveau solde en pièces
-        API-->>P: HTTP 201 Created + nouveau solde en pièces
-        P-->>C: Achat réussi + nouveau solde en pièces
-        C-->>V: Confirmer l'achat et actualiser le solde
-        V-->>U: « Aspect acheté avec succès »<br/>Afficher le nouveau solde en pièces
+        V-->>U: « Connectez-vous pour acheter cet aspect »
+
+    else Joueur connecté
+        API->>S: acheterAspect(idUtilisateur, idAspect)
+
+        Note over S,DB: Début de transaction (@Transactional)
+
+        S->>R: possedeAspect(idUtilisateur, idAspect)
+        R->>DB: Vérifier si le joueur possède déjà l'aspect
+        DB-->>R: Résultat de la vérification
+        R-->>S: Possède ou ne possède pas
+
+        alt Aspect déjà possédé
+            S-->>API: Achat refusé : Aspect déjà possédé
+            API-->>P: HTTP 409 Conflict
+            P-->>C: Achat refusé
+            C-->>V: Afficher le refus
+            V-->>U: « Vous possédez déjà cet aspect »
+
+        else Aspect non possédé
+            S->>R: recupererPrixAspect(idAspect)
+            R->>DB: Récupérer le prix de l'aspect
+            DB-->>R: Prix en pièces
+            R-->>S: Prix en pièces
+
+            S->>R: debiterSiSoldeSuffisant(idUtilisateur, prix)
+            R->>DB: Débiter si solde >= prix
+            DB-->>R: Résultat du débit
+            R-->>S: Débit effectué ou refusé
+
+            alt Solde insuffisant
+                S-->>API: Achat refusé : Solde insuffisant
+                API-->>P: HTTP 409 Conflict
+                P-->>C: Achat refusé
+                C-->>V: Afficher le refus
+                V-->>U: « Pas assez de pièces »
+
+            else Solde suffisant
+                S->>R: ajouterAspect(idUtilisateur, idAspect)
+                R->>DB: Enregistrer l'aspect dans les possessions du joueur
+                DB-->>R: Aspect ajouté
+                R-->>S: Confirmation
+
+                S->>R: recupererSolde(idUtilisateur)
+                R->>DB: Récupérer le nouveau solde
+                DB-->>R: Nouveau solde
+                R-->>S: Nouveau solde
+
+                Note over S,DB: Validation de la transaction (COMMIT)
+
+                S-->>API: Achat réussi + nouveau solde
+                API-->>P: HTTP 200 OK + nouveau solde
+                P-->>C: Achat réussi + nouveau solde
+                C-->>V: Confirmer l'achat
+                V-->>U: « Aspect acheté avec succès »
+                V-->>U: Afficher le nouveau solde
+            end
+        end
     end

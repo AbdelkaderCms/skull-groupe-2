@@ -1,3 +1,4 @@
+
 sequenceDiagram
     actor U as Utilisateur
     participant V as Vue
@@ -10,53 +11,32 @@ sequenceDiagram
 
     U->>V: Cliquer sur « Marketplace »
     V->>C: consulterMarketplace()
-    C->>P: recupererAspectsMarketplace()
-    P->>API: GET /marketplace/aspects
-    API->>S: recupererAspectsPourJoueur(idUtilisateur)
+    C->>P: recupererSetsMarketplace()
+    P->>API: GET /marketplace/sets
+    API->>S: recupererSetsPourJoueur(idUtilisateur)
 
-    S->>R: recupererAspectCourant(idUtilisateur)
-    R->>DB: Rechercher l'aspect équipé par le joueur
-    DB-->>R: Aspect courant ou aucun
-    R-->>S: aspectCourant
+    S->>R: recupererTousLesSets()
+    R->>DB: Rechercher tous les sets du catalogue
+    DB-->>R: Liste des sets avec leurs aspects
+    R-->>S: sets
 
-    S->>R: recupererAspectsPossedes(idUtilisateur)
-    R->>DB: Rechercher les aspects débloqués ou achetés par le joueur
-    DB-->>R: Aspects possédés
-    R-->>S: aspectsPossedes
+    S->>R: recupererSetsPossedes(idUtilisateur)
+    R->>DB: Rechercher les sets achetés ou débloqués
+    DB-->>R: Sets possédés
+    R-->>S: setsPossedes
 
-    S->>R: recupererAspectsNonPossedes(idUtilisateur)
-    R->>DB: Rechercher les aspects du catalogue<br/>en excluant ceux possédés par le joueur
-    DB-->>R: Aspects non possédés avec prix en pièces
-    R-->>S: aspectsExistants
+    S->>R: recupererSetCourant(idUtilisateur)
+    R->>DB: Rechercher le set actuellement équipé
+    DB-->>R: Set courant
+    R-->>S: setCourant
 
-    S->>S: Classer les aspects selon leur statut pour le joueur
-    Note right of S: Courant : aspect équipé<br/>Possédés : aspects débloqués ou achetés<br/>Existants : aspects du catalogue non possédés
-    S-->>API: { aspectCourant, aspectsPossedes, aspectsExistants }
-    API-->>P: HTTP 200 OK + les trois groupes
-    P-->>C: Les trois groupes d'aspects
-    C-->>V: Les trois groupes d'aspects
+    S->>S: Associer les statuts à chaque set
+    Note right of S: Possédé : affiche une coche<br/>Non possédé : affiche le prix et le bouton d'achat<br/>Courant : affichage en surbrillance
 
-    alt Aucun aspect à afficher
-        V-->>U: Afficher « Aucun aspect disponible »
-    else Données trouvées
-        V-->>U: Afficher les sections « Aspect courant »,<br/>« Aspects possédés » et « Aspects existants »
-        Note over U,V: Aspects fleurs et crânes<br/>Prix en pièces pour les aspects existants non possédés
+    S-->>API: Liste de SetMarketplaceDTO
+    API-->>P: HTTP 200 OK + catalogue des sets
+    P-->>C: Liste des sets et leurs statuts
+    C-->>V: Liste des sets et leurs statuts
 
-        opt L'utilisateur clique sur un aspect
-            U->>V: Consulter le détail d'un aspect
-            V->>C: consulterDetailAspect(idAspect)
-            C->>P: recupererDetailAspect(idAspect)
-            P->>API: GET /marketplace/aspects/{idAspect}
-            API->>S: recupererDetailAspectPourJoueur(idUtilisateur, idAspect)
-            S->>R: recupererAspectEtStatutJoueur(idAspect, idUtilisateur)
-            R->>DB: Charger l'aspect et vérifier son équipement<br/>et sa possession par le joueur
-            DB-->>R: Aspect et données du joueur
-            R-->>S: Aspect et données du joueur
-            S->>S: Déterminer le statut : courant si équipé,<br/>sinon possédé, sinon existant non possédé
-            S-->>API: Nom, description et statut de l'aspect
-            API-->>P: HTTP 200 OK + détail de l'aspect
-            P-->>C: Détail de l'aspect
-            C-->>V: Détail de l'aspect
-            V-->>U: Afficher le nom, la description et le statut
-        end
-    end
+    V-->>U: Afficher tous les sets
+    Note over U,V: Chaque ligne contient le nom du set<br/>et ses quatre aspects illustrés<br/>Les sets possédés affichent une coche<br/>Les autres affichent leur prix et le panier<br/>Le set courant est en surbrillance

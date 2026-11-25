@@ -13,7 +13,7 @@ public class MembreEntity extends JoueurEntity{
     private Boolean estBanni;
 
     @ManyToOne
-    private SetEntity setEntity;
+    private SetEntity setCourant;
 
     @ManyToMany
     @JoinTable(
@@ -61,4 +61,19 @@ public class MembreEntity extends JoueurEntity{
     public void setEstBanni(Boolean estBanni) {
         this.estBanni = estBanni;
     }
+
+    public void setSetCourant(SetEntity set){
+            this.setCourant=set;
+    }
+    public SetEntity getSetCourant(){
+        return this.setCourant;
+    }
+
+    public void addSetPossedes(SetEntity set){
+        this.sets.add(set);
+    }
+    public Set<SetEntity> getSetsPossedes(){
+        return this.sets;
+    }
+
 }

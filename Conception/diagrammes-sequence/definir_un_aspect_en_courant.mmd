@@ -1,5 +1,6 @@
+
 sequenceDiagram
-    participant U as Utilisateur
+    actor U as Utilisateur
     participant V as Vue
     participant C as ControleurJavaFX
     participant P as Proxy
@@ -8,33 +9,74 @@ sequenceDiagram
     participant R as Repository
     participant DB as BDD
 
-    Note over U,V: L'utilisateur consulte ses aspects
-    U->>V: Sélectionne un aspect
-    U->>V: Clique sur « Définir comme aspect courant »
+    Note over U,V: L'utilisateur consulte ses aspects possédés
+    U->>V: Sélectionner un aspect
+    U->>V: Cliquer sur « Définir comme aspect courant »
     V->>C: definirAspectCourant(idAspect)
     C->>P: definirAspectCourant(idAspect)
-    P->>API: PUT /joueurs/me/aspect-courant + token<br/>{idAspect}
-    Note over API,S: Identité du joueur issue du token validé
-    API->>S: definirAspectCourant(idJoueur, idAspect)
-    S->>R: verifierPossessionAspect(idJoueur, idAspect)
-    R->>DB: SELECT inventaire WHERE joueur_id = :idJoueur<br/>AND aspect_id = :idAspect
-    DB-->>R: Aspect possédé / non possédé
-    R-->>S: Résultat de la vérification
+    P->>API: PATCH /joueurs/me/aspect-courant + token + {idAspect}
 
-    alt Aspect non possédé
-        S-->>API: Modification refusée
-        API-->>P: HTTP 403 Forbidden + motif
-        P-->>C: Aspect non possédé
+    API->>API: Vérifier le token et récupérer l'identité du joueur
+
+    alt Utilisateur non connecté
+        API-->>P: HTTP 401 Unauthorized
+        P-->>C: Authentification requise
         C-->>V: Afficher l'erreur
-        V-->>U: Affiche « Vous ne possédez pas cet aspect »
-    else Aspect possédé
-        S->>R: modifierAspectCourant(idJoueur, idAspect)
-        R->>DB: UPDATE joueur SET aspect_courant_id = :idAspect<br/>WHERE id = :idJoueur
-        DB-->>R: Aspect courant enregistré
-        R-->>S: Modification confirmée
-        S-->>API: Nouvel aspect courant
-        API-->>P: HTTP 200 OK + aspect courant
-        P-->>C: Aspect courant mis à jour
-        C-->>V: Actualiser l'apparence et l'aspect sélectionné
-        V-->>U: Affiche « Aspect courant mis à jour »
+        V-->>U: « Connectez-vous pour effectuer cette action »
+
+    else Utilisateur connecté
+        API->>API: Vérifier la validité de l'identifiant
+
+        alt Identifiant manquant ou invalide
+            API-->>P: HTTP 400 Bad Request
+            P-->>C: Paramètre invalide
+            C-->>V: Afficher l'erreur
+            V-->>U: « Identifiant d'aspect invalide »
+
+        else Identifiant valide
+            API->>S: definirAspectCourant(idJoueur, idAspect)
+
+            Note over S,DB: Début de transaction (@Transactional)
+
+            S->>R: verifierExistenceAspect(idAspect)
+            R->>DB: Rechercher l'aspect par son identifiant
+            DB-->>R: Aspect trouvé ou absent
+            R-->>S: Résultat de la recherche
+
+            alt Aspect inexistant
+                S-->>API: Modification refusée
+                API-->>P: HTTP 404 Not Found
+                P-->>C: Aspect inexistant
+                C-->>V: Afficher l'erreur
+                V-->>U: « Cet aspect n'existe pas »
+
+            else Aspect existant
+                S->>R: verifierPossessionAspect(idJoueur, idAspect)
+                R->>DB: SELECT membre_set WHERE membre_id = :idJoueur AND set_id = :idAspect
+                DB-->>R: Résultat de la vérification
+                R-->>S: Aspect possédé ou non
+
+                alt Aspect non possédé
+                    S-->>API: Modification refusée
+                    API-->>P: HTTP 403 Forbidden
+                    P-->>C: Aspect non possédé
+                    C-->>V: Afficher l'erreur
+                    V-->>U: « Vous ne possédez pas cet aspect »
+
+                else Aspect possédé
+                    S->>R: modifierAspectCourant(idJoueur, idAspect)
+                    R->>DB: UPDATE membre SET aspect_courant_id = :idAspect WHERE id = :idJoueur
+                    DB-->>R: Modification enregistrée
+                    R-->>S: Modification confirmée
+
+                    Note over S,DB: Validation de la transaction (COMMIT)
+
+                    S-->>API: Modification réussie
+                    API-->>P: HTTP 204 No Content
+                    P-->>C: Aspect courant mis à jour
+                    C-->>V: Actualiser l'apparence et l'aspect sélectionné
+                    V-->>U: « Aspect courant mis à jour »
+                end
+            end
+        end
     end
