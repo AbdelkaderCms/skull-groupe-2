@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:8080/api/game
+@partieId = 1
+@mancheId = 1
+@pseudo = jean123
+@autrePseudo = bob45
+
+### Consulter l'enchère en cours
+GET {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres/courante
+
+### Enchérir
+POST {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres?pseudo={{pseudo}}
+Content-Type: application/json
+
+{
+  "valeur": 1
+}
+
+### Consulter l'enchère en cours après l'enchère
+GET {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres/courante
+
+### Enchérir alors que ce n'est pas son tour (409)
+POST {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres?pseudo={{pseudo}}
+Content-Type: application/json
+
+{
+  "valeur": 2
+}
+
+### Enchérir sans valeur (400)
+POST {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres?pseudo={{autrePseudo}}
+Content-Type: application/json
+
+{
+}
+
+### Manche inexistante (404)
+GET {{baseUrl}}/{{partieId}}/manches/9999/encheres/courante
+
+### Quitter la partie
+DELETE {{baseUrl}}/{{partieId}}/joueurs?pseudo={{pseudo}}
+
+### Quitter une partie où l'on n'est plus (404)
+DELETE {{baseUrl}}/{{partieId}}/joueurs?pseudo={{pseudo}}
