@@ -1,18 +1,22 @@
 package Models;
 
-import Entities.EnchereEntity;
-
 public class EnchereCouranteData {
-    private EnchereEntity enchere;
+    private Integer valeur;
+    private String pseudoJoueur;
     private int enchereMinimale;
 
-    public EnchereCouranteData(EnchereEntity enchere, int enchereMinimale){
-        this.enchere = enchere;
+    public EnchereCouranteData(Integer valeur, String pseudoJoueur, int enchereMinimale){
+        this.valeur = valeur;
+        this.pseudoJoueur = pseudoJoueur;
         this.enchereMinimale = enchereMinimale;
     }
 
-    public EnchereEntity getEnchere() {
-        return enchere;
+    public Integer getValeur() {
+        return valeur;
+    }
+
+    public String getPseudoJoueur() {
+        return pseudoJoueur;
     }
 
     public int getEnchereMinimale() {

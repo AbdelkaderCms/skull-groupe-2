@@ -11,8 +11,6 @@ import Repositories.PartieRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,8 +30,7 @@ public class EnchereService {
         PartieEntity partie = this.partieRepository.findById(partieId)
                 .orElseThrow(() -> new NotFoundException("Partie inexistante"));
         MancheEntity manche = trouverManche(partie, mancheId);
-        EnchereEntity derniere = derniereEnchere(manche);
-        return new EnchereCouranteData(derniere, enchereMinimale(derniere));
+        return enchereCourante(manche.getId());
     }
 
     @Transactional
@@ -49,49 +46,52 @@ public class EnchereService {
                 .orElseThrow(() -> new NotFoundException("Partie inexistante"));
         MancheEntity manche = trouverManche(partie, mancheId);
 
-        JoueurEntity joueur = null;
-        for (JoueurEntity j : joueursDansLOrdre(partie)) {
-            if (memeJoueur(j, membre)) {
-                joueur = j;
-            }
-        }
-        if (joueur == null) {
+        if (participe(partie, membre) == false) {
             throw new ForbiddenException("Vous ne participez pas à cette partie");
         }
-
-        boolean phaseOk = manche.getPhase() == PhaseManche.POSE || manche.getPhase() == PhaseManche.ENCHERES;
-        if (Boolean.TRUE.equals(manche.getEstEnCours()) == false || phaseOk == false) {
-            throw new ConflictException("Enchère impossible : la manche n'est pas en phase d'enchères");
+        if (Boolean.TRUE.equals(manche.getEstEnCours()) == false) {
+            throw new ConflictException("Enchère impossible : la manche n'est pas en cours");
         }
-        if (memeJoueur(joueur, manche.getJoueurCourant()) == false) {
-            throw new ConflictException("Enchère impossible : ce n'est pas votre tour");
+        if (this.enchereRepository.findChallenger(mancheId) != null) {
+            throw new ConflictException("Enchère impossible : les enchères sont terminées");
         }
-        if (aPasse(manche, joueur)) {
+        if (this.enchereRepository.countPasses(mancheId, membre.getId()) > 0) {
             throw new ConflictException("Enchère impossible : vous vous êtes retiré de la manche");
         }
-        int minimum = enchereMinimale(derniereEnchere(manche));
-        int totalTuiles = nombreTuilesPosees(manche);
+        int minimum = enchereCourante(mancheId).getEnchereMinimale();
+        int totalTuiles = (int) this.enchereRepository.countTuilesPosees(mancheId);
         int valeur = dto.getValeur();
         if (valeur < minimum || valeur > totalTuiles) {
             throw new ConflictException("Enchère impossible : la valeur doit être comprise entre " + minimum + " et " + totalTuiles);
         }
 
         EnchereEntity enchere = new EnchereEntity(valeur);
-        enchere.setJoueurEntity(joueur);
+        enchere.setId(this.enchereRepository.findDernierIdCoup() + 1);
         this.enchereRepository.save(enchere);
-        manche.getCoupEntities().add(enchere);
+        this.enchereRepository.affecterMembre(enchere.getId(), membre);
+        this.enchereRepository.ajouterALaManche(enchere.getId(), mancheId);
 
         //Fin des enchères
-        JoueurEntity suivant = joueurSuivant(partie, manche, joueur);
-        if (valeur == totalTuiles || memeJoueur(suivant, joueur)) {
-            manche.setPhase(PhaseManche.RESOLUTION);
-            manche.setJoueurEntity(joueur);
-            manche.setJoueurCourant(joueur);
-        } else {
-            manche.setPhase(PhaseManche.ENCHERES);
-            manche.setJoueurCourant(suivant);
+        String challenger = null;
+        if (valeur == totalTuiles || tousLesAutresSeSontRetires(partie, mancheId, membre)) {
+            this.enchereRepository.definirChallenger(mancheId, membre);
+            challenger = membre.getPseudo();
         }
-        return new EtatMancheData(manche, enchere);
+        return new EtatMancheData(mancheId, valeur, membre.getPseudo(), challenger);
+    }
+
+    private EnchereCouranteData enchereCourante(Integer mancheId) {
+        List<CoupEntity> encheres = this.enchereRepository.findEncheresDeLaManche(mancheId);
+        if (encheres.isEmpty()) {
+            return new EnchereCouranteData(null, null, 1);
+        }
+        EnchereEntity derniere = (EnchereEntity) encheres.get(0);
+        MembreEntity encherisseur = this.enchereRepository.findMembreDuCoup(derniere.getId());
+        String pseudo = null;
+        if (encherisseur != null) {
+            pseudo = encherisseur.getPseudo();
+        }
+        return new EnchereCouranteData(derniere.getValeur(), pseudo, derniere.getValeur() + 1);
     }
 
     private MancheEntity trouverManche(PartieEntity partie, Integer mancheId) throws NotFoundException {
@@ -105,77 +105,24 @@ public class EnchereService {
         throw new NotFoundException("Manche inexistante");
     }
 
-    private EnchereEntity derniereEnchere(MancheEntity manche) {
-        EnchereEntity derniere = null;
-        for (CoupEntity coup : coups(manche)) {
-            if (coup instanceof EnchereEntity enchere && (derniere == null || enchere.getId() > derniere.getId())) {
-                derniere = enchere;
-            }
-        }
-        return derniere;
-    }
-
-    private int enchereMinimale(EnchereEntity derniere) {
-        if (derniere == null) {
-            return 1;
-        }
-        return derniere.getValeur() + 1;
-    }
-
-    private int nombreTuilesPosees(MancheEntity manche) {
-        int nombre = 0;
-        for (CoupEntity coup : coups(manche)) {
-            if (coup instanceof PoseTuileEntity) {
-                nombre++;
-            }
-        }
-        return nombre;
-    }
-
-    private boolean aPasse(MancheEntity manche, JoueurEntity joueur) {
-        for (CoupEntity coup : coups(manche)) {
-            if (coup instanceof PasseEntity && memeJoueur(coup.getJoueurEntity(), joueur)) {
-                return true;
+    private boolean participe(PartieEntity partie, MembreEntity membre) {
+        if (partie.getJoueurs() != null) {
+            for (JoueurEntity joueur : partie.getJoueurs()) {
+                if (Objects.equals(joueur.getId(), membre.getId())) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    private JoueurEntity joueurSuivant(PartieEntity partie, MancheEntity manche, JoueurEntity joueur) {
-        List<JoueurEntity> ordre = joueursDansLOrdre(partie);
-        int position = 0;
-        for (int i = 0; i < ordre.size(); i++) {
-            if (memeJoueur(ordre.get(i), joueur)) {
-                position = i;
+    private boolean tousLesAutresSeSontRetires(PartieEntity partie, Integer mancheId, MembreEntity membre) {
+        for (JoueurEntity joueur : partie.getJoueurs()) {
+            if (Objects.equals(joueur.getId(), membre.getId()) == false
+                    && this.enchereRepository.countPasses(mancheId, joueur.getId()) == 0) {
+                return false;
             }
         }
-        for (int i = 1; i < ordre.size(); i++) {
-            JoueurEntity candidat = ordre.get((position + i) % ordre.size());
-            if (aPasse(manche, candidat) == false) {
-                return candidat;
-            }
-        }
-        return joueur;
-    }
-
-    private List<JoueurEntity> joueursDansLOrdre(PartieEntity partie) {
-        List<JoueurEntity> joueurs = new ArrayList<>();
-        if (partie.getJoueurs() != null) {
-            joueurs.addAll(partie.getJoueurs());
-        }
-        joueurs.sort(Comparator.comparing(JoueurEntity::getId));
-        return joueurs;
-    }
-
-    private List<CoupEntity> coups(MancheEntity manche) {
-        List<CoupEntity> coups = new ArrayList<>();
-        if (manche.getCoupEntities() != null) {
-            coups.addAll(manche.getCoupEntities());
-        }
-        return coups;
-    }
-
-    private boolean memeJoueur(JoueurEntity a, JoueurEntity b) {
-        return a != null && b != null && Objects.equals(a.getId(), b.getId());
+        return true;
     }
 }

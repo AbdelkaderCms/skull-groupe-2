@@ -2,9 +2,6 @@ package Mappers;
 
 import DTOs.EnchereCouranteDTO;
 import DTOs.EtatMancheDTO;
-import Entities.EnchereEntity;
-import Entities.JoueurEntity;
-import Entities.MancheEntity;
 import Models.EnchereCouranteData;
 import Models.EtatMancheData;
 import org.springframework.stereotype.Component;
@@ -15,29 +12,14 @@ public class EnchereMapper {
         if(data==null){
             return null;
         }
-        EnchereEntity enchere = data.getEnchere();
-        if(enchere==null){
-            return new EnchereCouranteDTO(null, null, data.getEnchereMinimale());
-        }
-        return new EnchereCouranteDTO(enchere.getValeur(), pseudo(enchere.getJoueurEntity()), data.getEnchereMinimale());
+        return new EnchereCouranteDTO(data.getValeur(), data.getPseudoJoueur(), data.getEnchereMinimale());
     }
 
     public EtatMancheDTO toDto(EtatMancheData data){
         if(data==null){
             return null;
         }
-        MancheEntity manche = data.getManche();
-        EnchereEntity enchere = data.getEnchere();
-        return new EtatMancheDTO(
-                manche.getId(),
-                manche.getPhase().name(),
-                enchere.getValeur(),
-                pseudo(enchere.getJoueurEntity()),
-                pseudo(manche.getJoueurCourant()),
-                pseudo(manche.getJoueurEntity()));
-    }
-
-    private String pseudo(JoueurEntity joueur){
-        return joueur==null ? null : joueur.getPseudo();
+        return new EtatMancheDTO(data.getMancheId(), data.getValeur(), data.getPseudoEncherisseur(),
+                data.getPseudoChallenger() != null, data.getPseudoChallenger());
     }
 }

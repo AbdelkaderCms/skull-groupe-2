@@ -14,13 +14,9 @@ public class EvenementEntity {
     @ManyToOne
     private CoupEntity coupsEntity;
 
-    @ManyToOne
-    private PartieEntity partieEntity;
-
     public EvenementEntity(){}
-    public EvenementEntity(MembreEntity membre, PartieEntity partie, CoupEntity coup){
+    public EvenementEntity(MembreEntity membre, CoupEntity coup){
         this.membreEntity=membre;
-        this.partieEntity=partie;
         this.coupsEntity=coup;
     }
 
@@ -38,9 +34,5 @@ public class EvenementEntity {
 
     public CoupEntity getCoupsEntity() {
         return coupsEntity;
-    }
-
-    public PartieEntity getPartieEntity() {
-        return partieEntity;
     }
 }

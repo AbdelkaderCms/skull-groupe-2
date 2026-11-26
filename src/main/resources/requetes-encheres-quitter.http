@@ -18,7 +18,7 @@ Content-Type: application/json
 ### Consulter l'enchère en cours après l'enchère
 GET {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres/courante
 
-### Enchérir alors que ce n'est pas son tour (409)
+### Enchérir avec une valeur trop basse (409)
 POST {{baseUrl}}/{{partieId}}/manches/{{mancheId}}/encheres?pseudo={{pseudo}}
 Content-Type: application/json
 

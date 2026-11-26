@@ -45,7 +45,7 @@ public class EnchereController {
         @ApiResponse(responseCode = "401", description = "Utilisateur non connecté"),
         @ApiResponse(responseCode = "403", description = "Le joueur ne participe pas à cette partie"),
         @ApiResponse(responseCode = "404", description = "Partie ou manche inexistante"),
-        @ApiResponse(responseCode = "409", description = "Enchère impossible (pas son tour, valeur trop basse ou trop haute, joueur retiré)")
+        @ApiResponse(responseCode = "409", description = "Enchère impossible (valeur trop basse ou trop haute, enchères terminées, joueur retiré)")
     })
     @PostMapping("/{partieId}/manches/{mancheId}/encheres")
     public ResponseEntity<EtatMancheDTO> encherir(@PathVariable Long partieId, @PathVariable Integer mancheId,
