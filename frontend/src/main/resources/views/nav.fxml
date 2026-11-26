@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="fr.miage.skull.controllers.NavController" alignment="CENTER" spacing="14" styleClass="nav">
+    <Label text="SKULL" styleClass="navlogo"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="Menu" onAction="#menu"/>
+    <Button text="Classement" onAction="#ranking"/>
+    <Button text="Historique" onAction="#history"/>
+    <Button text="Marketplace" onAction="#marketplace"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Label fx:id="coins"/>
+    <Label fx:id="points"/>
+    <Label fx:id="name" styleClass="avatar"/>
+    <Button text="Déconnexion" onAction="#logout"/>
+</HBox>

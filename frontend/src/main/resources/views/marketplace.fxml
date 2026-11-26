@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="fr.miage.skull.controllers.MarketController" styleClass="page">
+    <top>
+        <fx:include source="nav.fxml"/>
+    </top>
+    <center>
+        <VBox spacing="18" alignment="CENTER" styleClass="content-area">
+            <Label text="Marketplace" styleClass="heading,dark"/>
+            <Button fx:id="refresh" text="Actualiser" onAction="#load" styleClass="gold"/>
+            <Label fx:id="status" wrapText="true" styleClass="dark"/>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="history-scroll">
+                <content>
+                    <VBox fx:id="rows" spacing="12"/>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </center>
+</BorderPane>

@@ -1,0 +1,141 @@
+.page {
+    -fx-background-color: #f2eadb;
+    -fx-font-family: "Liberation Sans";
+    -fx-font-size: 15px;
+}
+
+.panel, .nav {
+    -fx-background-color: #722d38;
+    -fx-border-color: #c69b50;
+    -fx-border-width: 2;
+}
+
+.panel {
+    -fx-padding: 36 55;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.nav {
+    -fx-padding: 18 24;
+}
+
+.label {
+    -fx-text-fill: #eadcc5;
+}
+
+.logo, .heading, .navlogo {
+    -fx-font-family: "Liberation Serif";
+}
+
+.logo {
+    -fx-font-size: 42px;
+}
+
+.heading {
+    -fx-font-size: 27px;
+}
+
+.navlogo {
+    -fx-font-size: 23px;
+}
+
+.text-field {
+    -fx-background-color: #e8dcc5;
+    -fx-border-color: #c69b50;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+}
+
+.button {
+    -fx-cursor: hand;
+}
+
+.gold {
+    -fx-background-color: #c69b50;
+    -fx-text-fill: #291b15;
+    -fx-min-width: 190;
+    -fx-padding: 14;
+}
+
+.link, .nav .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e1bd79;
+}
+
+.button:hover {
+    -fx-opacity: 0.82;
+}
+
+.tile, .avatar {
+    -fx-background-color: #eadcc5;
+    -fx-background-radius: 100;
+    -fx-border-color: #c69b50;
+    -fx-border-radius: 100;
+    -fx-alignment: center;
+    -fx-text-fill: #49632f;
+}
+
+.tile {
+    -fx-min-width: 100;
+    -fx-min-height: 100;
+    -fx-font-size: 48px;
+}
+
+.avatar {
+    -fx-padding: 8;
+    -fx-text-fill: #722d38;
+}
+
+.round {
+    -fx-background-color: #722d38;
+    -fx-border-color: #c69b50;
+    -fx-background-radius: 100;
+    -fx-border-radius: 100;
+    -fx-min-width: 150;
+    -fx-min-height: 150;
+    -fx-text-fill: #eadcc5;
+    -fx-text-alignment: center;
+    -fx-font-size: 16px;
+}
+
+.dark {
+    -fx-text-fill: #722d38;
+}
+
+.content-area {
+    -fx-padding: 30 45;
+}
+
+.history-scroll {
+    -fx-background-color: transparent;
+    -fx-background: #f2eadb;
+}
+
+.history-scroll > .viewport {
+    -fx-background-color: #f2eadb;
+}
+
+.data-row, .data-header, .data-selected {
+    -fx-background-color: #722d38;
+    -fx-border-color: #c69b50;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 16;
+    -fx-alignment: center-left;
+}
+
+.data-header {
+    -fx-background-color: #54202b;
+    -fx-font-weight: bold;
+}
+
+.data-selected {
+    -fx-background-color: #c69b50;
+    -fx-font-weight: bold;
+}
+
+.data-selected .label {
+    -fx-text-fill: #291b15;
+}

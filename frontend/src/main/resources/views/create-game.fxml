@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="fr.miage.skull.controllers.CreateGameController" styleClass="page">
+    <top>
+        <fx:include source="nav.fxml"/>
+    </top>
+    <center>
+        <VBox spacing="18" alignment="CENTER" styleClass="panel">
+            <Label text="Mode de test : connexion et profil simulés" styleClass="label"/>
+            <Label text="Créer une partie" styleClass="heading"/>
+            <Label text="Nombre de joueurs"/>
+            <ComboBox fx:id="players"/>
+            <Label text="Nombre d’IA"/>
+            <ComboBox fx:id="bots"/>
+            <Button fx:id="create" text="Créer la partie" onAction="#create" styleClass="gold"/>
+            <Label fx:id="status" wrapText="true" maxWidth="600"/>
+        </VBox>
+    </center>
+</BorderPane>

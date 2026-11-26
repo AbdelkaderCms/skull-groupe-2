@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="fr.miage.skull.controllers.RegisterController" styleClass="page">
+    <VBox alignment="CENTER" spacing="22" maxWidth="640" maxHeight="-Infinity" styleClass="panel">
+        <Label text="SKULL" styleClass="logo"/>
+        <Label text="Inscription" styleClass="heading"/>
+        <VBox spacing="10">
+            <Label text="Adresse Mail"/>
+            <TextField fx:id="email"/>
+            <Label text="Mot de passe"/>
+            <PasswordField fx:id="password"/>
+            <Label text="Confirmer le mot de passe"/>
+            <PasswordField fx:id="confirm"/>
+        </VBox>
+        <Button text="S’inscrire" onAction="#submit" styleClass="gold" defaultButton="true"/>
+        <HBox alignment="CENTER" spacing="12">
+            <Label text="Vous avez déjà un compte ?"/>
+            <Button text="Se connecter" onAction="#switchView" styleClass="link"/>
+        </HBox>
+        <Label fx:id="feedback" wrapText="true"/>
+    </VBox>
+</StackPane>
