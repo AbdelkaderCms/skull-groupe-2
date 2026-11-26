@@ -11,8 +11,12 @@ public class NavController {
 
     @FXML
     private void initialize() {
+        refreshProfile();
+    }
+
+    public void refreshProfile() {
         var u = AppConfig.user();
-        coins.setText("◈ " + u.coins());
+        coins.setText("◈ " + AppConfig.MARKET.balance(AppConfig.marketIdentity(), u.coins()));
         points.setText("◆ " + u.points());
         name.setText(u.name());
     }

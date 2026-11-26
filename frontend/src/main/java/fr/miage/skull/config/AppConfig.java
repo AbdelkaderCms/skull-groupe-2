@@ -5,7 +5,6 @@ import fr.miage.skull.services.AuthService;
 import fr.miage.skull.services.mock.MockAuthService;
 
 public final class AppConfig {
-
     public static final AuthService AUTH = new MockAuthService();
     public static final fr.miage.skull.services.PlayerService PLAYERS = new fr.miage.skull.services.mock.MockPlayerService();
     public static final fr.miage.skull.services.HistoryService HISTORY = new fr.miage.skull.services.mock.MockHistoryService();
@@ -16,6 +15,10 @@ public final class AppConfig {
 
     public static String pseudo() {
         return API_MODE ? System.getenv().getOrDefault("SKULL_API_PSEUDO", "") : user.name();
+    }
+
+    public static String marketIdentity() {
+        return API_MODE ? pseudo() : user.email();
     }
 
     private static User user;

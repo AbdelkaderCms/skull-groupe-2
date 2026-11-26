@@ -1,0 +1,42 @@
+/* Marketplace et aperçu des tuiles */
+.market-intro, .market-row {
+    -fx-background-color: #722d38;
+    -fx-border-color: #c69b50;
+    -fx-border-width: 2;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 10 18;
+}
+
+.market-row {
+    -fx-min-height: 100;
+}
+
+.market-equipped {
+    -fx-background-color: #c4a36a;
+}
+
+.market-equipped .label {
+    -fx-text-fill: #382b25;
+}
+
+.market-tile {
+    -fx-background-color: #eadcc5;
+    -fx-background-radius: 100;
+    -fx-border-color: #c69b50;
+    -fx-border-radius: 100;
+    -fx-min-width: 76;
+    -fx-min-height: 76;
+    -fx-alignment: center;
+    -fx-font-size: 34;
+}
+
+.market-action {
+    -fx-background-color: #eadcc5;
+    -fx-text-fill: #382b25;
+    -fx-border-color: #c69b50;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-min-width: 110;
+    -fx-padding: 10;
+}

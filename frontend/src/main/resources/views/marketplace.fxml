@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="fr.miage.skull.controllers.MarketController" styleClass="page">
     <top>
-        <fx:include source="nav.fxml"/>
+        <fx:include fx:id="nav" source="nav.fxml"/>
     </top>
     <center>
-        <VBox spacing="18" alignment="CENTER" styleClass="content-area">
-            <Label text="Marketplace" styleClass="heading,dark"/>
-            <Button fx:id="refresh" text="Actualiser" onAction="#load" styleClass="gold"/>
-            <Label fx:id="status" wrapText="true" styleClass="dark"/>
+        <VBox spacing="12" alignment="TOP_CENTER" styleClass="content-area">
+            <VBox alignment="CENTER" spacing="8" maxWidth="620" styleClass="market-intro">
+                <Label text="Marketplace" styleClass="heading"/>
+                <Label text="Choisissez l’apparence de vos fleurs et de votre crâne. Le set équipé sera utilisé lors de votre prochaine partie."
+                       wrapText="true"/>
+            </VBox>
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="history-scroll">
                 <content>
-                    <VBox fx:id="rows" spacing="12"/>
+                    <VBox fx:id="rows" spacing="8"/>
                 </content>
             </ScrollPane>
+            <HBox alignment="CENTER" spacing="12">
+                <Label fx:id="status" wrapText="true" styleClass="dark"/>
+                <Button fx:id="refresh" text="Actualiser" onAction="#load"/>
+            </HBox>
         </VBox>
     </center>
 </BorderPane>
