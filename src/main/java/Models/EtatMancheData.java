@@ -1,31 +1,22 @@
 package Models;
 
+import Entities.EnchereEntity;
+import Entities.MancheEntity;
+
 public class EtatMancheData {
-    private Integer mancheId;
-    private Integer valeur;
-    private String pseudoEncherisseur;
-    private String pseudoChallenger;
+    private MancheEntity manche;
+    private EnchereEntity enchere;
 
-    public EtatMancheData(Integer mancheId, Integer valeur, String pseudoEncherisseur, String pseudoChallenger){
-        this.mancheId = mancheId;
-        this.valeur = valeur;
-        this.pseudoEncherisseur = pseudoEncherisseur;
-        this.pseudoChallenger = pseudoChallenger;
+    public EtatMancheData(MancheEntity manche, EnchereEntity enchere){
+        this.manche = manche;
+        this.enchere = enchere;
     }
 
-    public Integer getMancheId() {
-        return mancheId;
+    public MancheEntity getManche() {
+        return manche;
     }
 
-    public Integer getValeur() {
-        return valeur;
-    }
-
-    public String getPseudoEncherisseur() {
-        return pseudoEncherisseur;
-    }
-
-    public String getPseudoChallenger() {
-        return pseudoChallenger;
+    public EnchereEntity getEnchere() {
+        return enchere;
     }
 }

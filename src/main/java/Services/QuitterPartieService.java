@@ -5,26 +5,19 @@ import Exceptions.ConflictException;
 import Exceptions.NotFoundException;
 import Exceptions.UnauthorizedException;
 import Repositories.EvenementRepository;
-import Repositories.JoueurRepository;
 import Repositories.MembreRepository;
 import Repositories.PartieRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 @Service
 public class QuitterPartieService {
     private final PartieRepository partieRepository;
     private final MembreRepository membreRepository;
-    private final JoueurRepository joueurRepository;
     private final EvenementRepository evenementRepository;
-    public QuitterPartieService(PartieRepository partieRepository, MembreRepository membreRepository, JoueurRepository joueurRepository, EvenementRepository evenementRepository){
+    public QuitterPartieService(PartieRepository partieRepository, MembreRepository membreRepository, EvenementRepository evenementRepository){
         this.partieRepository=partieRepository;
         this.membreRepository=membreRepository;
-        this.joueurRepository=joueurRepository;
         this.evenementRepository=evenementRepository;
     }
 
@@ -37,8 +30,7 @@ public class QuitterPartieService {
         PartieEntity partie = this.partieRepository.findById(partieId)
                 .orElseThrow(() -> new NotFoundException("Partie inexistante"));
 
-        Set<JoueurEntity> joueurs = partie.getJoueurs();
-        if (joueurs == null || joueurs.stream().noneMatch(j -> Objects.equals(j.getId(), membre.getId()))) {
+        if (partie.getJoueurs().stream().noneMatch(j -> j.getId().equals(membre.getId()))) {
             throw new NotFoundException("Joueur absent de cette partie");
         }
         if (partie.getGagnant() != null) {
@@ -46,30 +38,24 @@ public class QuitterPartieService {
         }
 
         //Partie pas encore commencée
-        if (partie.getMancheEntities() == null || partie.getMancheEntities().isEmpty()) {
-            joueurs.removeIf(j -> Objects.equals(j.getId(), membre.getId()));
+        if (partie.getMancheEntities().isEmpty()) {
+            partie.getJoueurs().removeIf(j -> j.getId().equals(membre.getId()));
             return;
         }
 
-        //Partie en cours : une IA prend la place
-        JoueurEntity ia = null;
-        for (JoueurEntity candidat : this.joueurRepository.findAll()) {
-            if (ia == null && candidat instanceof IAEntity && joueurs.stream().noneMatch(j -> Objects.equals(j.getId(), candidat.getId()))) {
-                ia = candidat;
+        //Partie en cours : l'IA jouera à sa place
+        this.evenementRepository.save(new EvenementEntity(membre, dernierCoup(partie)));
+    }
+
+    private CoupEntity dernierCoup(PartieEntity partie) {
+        CoupEntity dernier = null;
+        for (MancheEntity manche : partie.getMancheEntities()) {
+            for (CoupEntity coup : manche.getCoupEntities()) {
+                if (dernier == null || coup.getId() > dernier.getId()) {
+                    dernier = coup;
+                }
             }
         }
-        if (ia == null) {
-            throw new ConflictException("Aucune IA disponible pour remplacer le joueur");
-        }
-
-        List<CoupEntity> coups = this.evenementRepository.findCoupsDeLaPartie(partieId);
-        CoupEntity dernierCoup = null;
-        if (coups.isEmpty() == false) {
-            dernierCoup = coups.get(0);
-        }
-        this.evenementRepository.save(new EvenementEntity(membre, dernierCoup));
-
-        joueurs.removeIf(j -> Objects.equals(j.getId(), membre.getId()));
-        partie.ajoutJoueur(ia);
+        return dernier;
     }
 }

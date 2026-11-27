@@ -3,25 +3,22 @@ package DTOs;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class EnchereCouranteDTO {
-    @Schema(description="Valeur de l'enchère en cours ", example ="2", accessMode=Schema.AccessMode.READ_ONLY)
-    private Integer valeur;
-    @Schema(description="Pseudo du joueur qui a fait l'enchère en cours", example ="jean123", accessMode=Schema.AccessMode.READ_ONLY)
+    @Schema(description="Enchère la plus haute déjà faite dans la manche (0 si aucune enchère)", example ="2", accessMode=Schema.AccessMode.READ_ONLY)
+    private Integer enchereCourante;
+    @Schema(description="Pseudo du joueur qui a fait cette enchère", example ="jean123", accessMode=Schema.AccessMode.READ_ONLY)
     private String pseudoJoueur;
-    @Schema(description="Plus petite enchère autorisée", example ="3", accessMode=Schema.AccessMode.READ_ONLY)
-    private Integer enchereMinimale;
 
-    public EnchereCouranteDTO(Integer valeur, String pseudoJoueur, Integer enchereMinimale){
-        this.valeur=valeur;
+    public EnchereCouranteDTO(Integer enchereCourante, String pseudoJoueur){
+        this.enchereCourante=enchereCourante;
         this.pseudoJoueur=pseudoJoueur;
-        this.enchereMinimale=enchereMinimale;
     }
 
-    public Integer getValeur() {
-        return valeur;
+    public Integer getEnchereCourante() {
+        return enchereCourante;
     }
 
-    public void setValeur(Integer valeur) {
-        this.valeur = valeur;
+    public void setEnchereCourante(Integer enchereCourante) {
+        this.enchereCourante = enchereCourante;
     }
 
     public String getPseudoJoueur() {
@@ -30,13 +27,5 @@ public class EnchereCouranteDTO {
 
     public void setPseudoJoueur(String pseudoJoueur) {
         this.pseudoJoueur = pseudoJoueur;
-    }
-
-    public Integer getEnchereMinimale() {
-        return enchereMinimale;
-    }
-
-    public void setEnchereMinimale(Integer enchereMinimale) {
-        this.enchereMinimale = enchereMinimale;
     }
 }

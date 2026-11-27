@@ -5,20 +5,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class EtatMancheDTO {
     @Schema(description="Identifiant de la manche", example ="5", accessMode=Schema.AccessMode.READ_ONLY)
     private Integer mancheId;
-    @Schema(description="Valeur de l'enchère en cours", example ="3", accessMode=Schema.AccessMode.READ_ONLY)
+    @Schema(description="Enchère la plus haute", example ="3", accessMode=Schema.AccessMode.READ_ONLY)
     private Integer enchereCourante;
-    @Schema(description="Pseudo du joueur qui a fait l'enchère en cours", example ="jean123", accessMode=Schema.AccessMode.READ_ONLY)
+    @Schema(description="Pseudo du joueur qui a fait cette enchère", example ="jean123", accessMode=Schema.AccessMode.READ_ONLY)
     private String pseudoEncherisseur;
-    @Schema(description="Les enchères sont terminées", example ="false", accessMode=Schema.AccessMode.READ_ONLY)
-    private boolean encheresTerminees;
-    @Schema(description="Pseudo du challenger", example ="jean123", accessMode=Schema.AccessMode.READ_ONLY)
+    @Schema(description="Pseudo du joueur dont c'est le tour", example ="bob45", accessMode=Schema.AccessMode.READ_ONLY)
+    private String pseudoJoueurCourant;
+    @Schema(description="Pseudo du challenger (null tant que les enchères continuent)", example ="jean123", accessMode=Schema.AccessMode.READ_ONLY)
     private String pseudoChallenger;
 
-    public EtatMancheDTO(Integer mancheId, Integer enchereCourante, String pseudoEncherisseur, boolean encheresTerminees, String pseudoChallenger){
+    public EtatMancheDTO(Integer mancheId, Integer enchereCourante, String pseudoEncherisseur, String pseudoJoueurCourant, String pseudoChallenger){
         this.mancheId=mancheId;
         this.enchereCourante=enchereCourante;
         this.pseudoEncherisseur=pseudoEncherisseur;
-        this.encheresTerminees=encheresTerminees;
+        this.pseudoJoueurCourant=pseudoJoueurCourant;
         this.pseudoChallenger=pseudoChallenger;
     }
 
@@ -46,12 +46,12 @@ public class EtatMancheDTO {
         this.pseudoEncherisseur = pseudoEncherisseur;
     }
 
-    public boolean isEncheresTerminees() {
-        return encheresTerminees;
+    public String getPseudoJoueurCourant() {
+        return pseudoJoueurCourant;
     }
 
-    public void setEncheresTerminees(boolean encheresTerminees) {
-        this.encheresTerminees = encheresTerminees;
+    public void setPseudoJoueurCourant(String pseudoJoueurCourant) {
+        this.pseudoJoueurCourant = pseudoJoueurCourant;
     }
 
     public String getPseudoChallenger() {
