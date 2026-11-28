@@ -15,6 +15,9 @@ public class MancheEntity {
     private JoueurEntity joueurEntity;
 
     @ManyToOne
+    private JoueurEntity joueurCourant;
+
+    @ManyToOne
     private TuileEntity tuileEntity;
 
     @OneToMany
@@ -43,5 +46,25 @@ public class MancheEntity {
 
     public void setEstGagnee(Boolean estGagnee) {
         this.estGagnee = estGagnee;
+    }
+
+    public JoueurEntity getJoueurEntity() {
+        return joueurEntity;
+    }
+
+    public void setJoueurEntity(JoueurEntity joueurEntity) {
+        this.joueurEntity = joueurEntity;
+    }
+
+    public JoueurEntity getJoueurCourant() {
+        return joueurCourant;
+    }
+
+    public void setJoueurCourant(JoueurEntity joueurCourant) {
+        this.joueurCourant = joueurCourant;
+    }
+
+    public Set<CoupEntity> getCoupEntities() {
+        return coupEntities;
     }
 }

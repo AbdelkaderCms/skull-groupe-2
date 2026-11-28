@@ -2,12 +2,16 @@ package Entities;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 @Entity
 @DiscriminatorValue("Enchere")
 public class EnchereEntity extends CoupEntity{
     private Integer valeur;
+
+    public EnchereEntity(){}
+    public EnchereEntity(Integer valeur){
+        this.valeur=valeur;
+    }
 
     public Integer getId() {
         return this.id;
@@ -25,4 +29,3 @@ public class EnchereEntity extends CoupEntity{
         this.valeur = valeur;
     }
 }
-

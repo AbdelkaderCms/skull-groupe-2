@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 @DiscriminatorColumn(name="type")
 public class CoupEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer id;
 
     @ManyToOne
@@ -18,5 +19,13 @@ public class CoupEntity {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public MembreEntity getMembreEntity() {
+        return membreEntity;
+    }
+
+    public void setMembreEntity(MembreEntity membreEntity) {
+        this.membreEntity = membreEntity;
     }
 }

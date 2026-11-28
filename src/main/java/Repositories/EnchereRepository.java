@@ -1,4 +1,9 @@
 package Repositories;
 
-public interface EnchereRepository {
+import Entities.EnchereEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface EnchereRepository extends JpaRepository<EnchereEntity,Integer> {
 }
